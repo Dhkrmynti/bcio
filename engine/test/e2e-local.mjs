@@ -1,17 +1,35 @@
-// Tes end-to-end di anvil lokal (CHAIN=local, engine berjalan di :5191).
-//   node test/e2e-local.mjs
-// User = akun anvil #2: faucet -> beli basket -> izinkan agent -> aktifkan shield & rebalancer
+// Tes end-to-end (engine berjalan di :5191 dengan CHAIN yang sama).
+//   node test/e2e-local.mjs                     # anvil lokal, user = akun anvil #6
+//   E2E_CHAIN=testnet node test/e2e-local.mjs   # Robinhood Chain testnet: user = wallet baru,
+//                                               # diberi sedikit ETH gas dari contracts/.testnet-wallet
+// Alur: faucet -> beli basket -> izinkan agent -> aktifkan shield & rebalancer
 // lewat API bertanda tangan -> engine mengeksekusi lewat executeFor -> cek batas policy.
 import fs from 'node:fs';
 import { createPublicClient, createWalletClient, http, parseUnits, defineChain } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
+import { privateKeyToAccount, generatePrivateKey } from 'viem/accounts';
 import { DESK_ABI } from '../src/chain.js';
 
 const API = 'http://127.0.0.1:5191';
-const d = JSON.parse(fs.readFileSync(new URL('../deployments/31337.json', import.meta.url)));
-const chain = defineChain({ id: 31337, name: 'anvil', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [d.rpc] } } });
-const user = privateKeyToAccount('0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e');
+const TESTNET = process.env.E2E_CHAIN === 'testnet';
+const CHAIN_ID = TESTNET ? 46630 : 31337;
+const d = JSON.parse(fs.readFileSync(new URL(`../deployments/${CHAIN_ID}.json`, import.meta.url)));
+const chain = defineChain({ id: CHAIN_ID, name: TESTNET ? 'Robinhood Chain Testnet' : 'anvil', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [d.rpc] } } });
 const pub = createPublicClient({ chain, transport: http() });
+const txs = [];
+const explorer = (h) => (d.explorer ? `${d.explorer}/tx/${h}` : h);
+
+let user;
+if (TESTNET) {
+  // wallet user sekali pakai, gas-nya dari wallet deploy (key tidak pernah dicetak)
+  user = privateKeyToAccount(generatePrivateKey());
+  const key = fs.readFileSync(new URL('../../contracts/.testnet-wallet', import.meta.url), 'utf8').match(/DEPLOYER_PRIVATE_KEY=(0x[0-9a-fA-F]{64})/)[1];
+  const funder = createWalletClient({ chain, account: privateKeyToAccount(key), transport: http() });
+  const hash = await funder.sendTransaction({ to: user.address, value: parseUnits('0.0008', 18) });
+  await pub.waitForTransactionReceipt({ hash });
+  console.log(`      test user ${user.address} funded with 0.0008 ETH: ${explorer(hash)}`);
+} else {
+  user = privateKeyToAccount('0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e');
+}
 const wal = createWalletClient({ chain, account: user, transport: http() });
 const T = d.tokens;
 
@@ -20,7 +38,10 @@ const check = (name, ok, extra = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  
 const send = async (fn, args) => {
   const { request } = await pub.simulateContract({ account: user, address: d.desk, abi: DESK_ABI, functionName: fn, args });
   const hash = await wal.writeContract(request);
-  return pub.waitForTransactionReceipt({ hash });
+  const rc = await pub.waitForTransactionReceipt({ hash });
+  if (rc.status !== 'success') throw new Error(`${fn} reverted: ${hash}`);
+  txs.push([fn, hash]);
+  return rc;
 };
 const api = async (path, body) => {
   const r = await fetch(API + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {});
@@ -94,5 +115,10 @@ console.log('      weights after:', JSON.stringify(Object.fromEntries(pf3.positi
 const auto = (await api(`/api/automation?address=${user.address}`)).body;
 check('activity log recorded', auto.activity.length >= 3, `${auto.activity.length} entries; spent today $${auto.policy.spent_today_usd}`);
 
+console.log('\n      user transactions:');
+txs.forEach(([fn, h]) => console.log(`        ${fn.padEnd(12)} ${explorer(h)}`));
+const agentTx = auto.activity.flatMap((e) => (e.trades || []).filter((t) => t.tx_url || t.hash).map((t) => [e.type, t.from + '->' + t.to, t.tx_url || t.hash]));
+if (agentTx.length) console.log('      agent transactions (executeFor):');
+agentTx.slice(0, 6).forEach(([ty, leg, h]) => console.log(`        ${ty.padEnd(9)} ${leg.padEnd(10)} ${String(h).startsWith('http') ? h : explorer(h)}`));
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASSED');
 process.exit(failed ? 1 : 0);

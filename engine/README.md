@@ -30,6 +30,18 @@ cd ../engine && npm start
 
 `deploy.sh` menulis `engine/deployments/<chainId>.json`, lalu mengisi `CHAIN` dan `KEEPER_PRIVATE_KEY` di `engine/.env`. Server hanya mendengarkan `127.0.0.1`. API key Claude dan key keeper tidak pernah dikirim ke browser.
 
+## Deployment testnet (aktif)
+
+Robinhood Chain testnet (46630), deploy 2026-11-15, alamat lengkap di `deployments/46630.json`:
+
+| | Alamat |
+|---|---|
+| Desk (oracle, swap, basket, faucet, policy agent) | [`0xDBc2E0e894fbeddaA69f3Cd7C8d8d92125D0F79a`](https://explorer.testnet.chain.robinhood.com/address/0xDBc2E0e894fbeddaA69f3Cd7C8d8d92125D0F79a) |
+| Keeper / agent (engine) | [`0x55D9b79e395a48D972baf4A8a1eb085e931F141b`](https://explorer.testnet.chain.robinhood.com/address/0x55D9b79e395a48D972baf4A8a1eb085e931F141b) |
+| tUSDC | `0x0601eB6cEB7c2aBC83175bA41196167390f1e1f6` |
+
+Tes penuh di testnet: `E2E_CHAIN=testnet node test/e2e-local.mjs` (engine harus jalan dengan `CHAIN=testnet`). Tes ini membuat wallet user sekali pakai dan memberinya 0.0008 ETH gas dari wallet keeper.
+
 ## Cara kerja eksekusi
 
 | Bagian | Isi |
@@ -63,6 +75,7 @@ npm run mcp     # MCP server (stdio)
 ```bash
 cd contracts && forge test            # 12 tes kontrak
 cd engine && node test/e2e-local.mjs  # alur penuh di anvil (engine harus jalan dengan CHAIN=local)
+E2E_CHAIN=testnet node test/e2e-local.mjs  # alur penuh di Robinhood Chain testnet
 ```
 
 ## Batasan
