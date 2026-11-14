@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BCIO — Unlock the Future with Crypto</title>
+  <meta name="description" content="Step into the future. Learn crypto with BCIO.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="preload" href="assets/coinball.glb?v=15" as="fetch" crossorigin>
+</head>
+<body>
+  <main class="card" id="card">
+   <div class="frame">
+    <!-- penanda posisi objek 3D; JS membaca posisi & ukurannya -->
+    <div class="anchor a-ball" data-anchor="ball"></div>
+    <div class="anchor a-spring" data-anchor="spring"></div>
+    <div class="anchor a-wave" data-anchor="wave"></div>
+    <div class="anchor a-ring" data-anchor="ring"></div>
+
+    <h1 class="crypto" aria-label="Unlock the future with crypto"><span aria-hidden="true">CRYPTO</span></h1>
+
+    <canvas id="stage" aria-hidden="true"></canvas>
+
+    <header class="nav">
+      <a class="logo" href="#">BCIO</a>
+      <nav class="links" aria-label="Main">
+        <a href="#">About us</a>
+        <button class="dropdown" type="button" aria-expanded="false">Cryptocurrency education
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <a href="#">Cryptocurrency market</a>
+        <a href="#">FAQ</a>
+      </nav>
+      <div class="auth">
+        <a class="pill ghost" href="#">Sign up</a>
+        <a class="pill solid" href="#">Sign in</a>
+      </div>
+      <button class="burger" type="button" aria-label="Menu"><span></span><span></span></button>
+    </header>
+
+    <p class="eyebrow"><svg class="burst" viewBox="-50 -50 100 100" aria-hidden="true"></svg>Unlock the future with</p>
+
+    <p class="lede">Step into the future. Empower yourself with crypto currency! Embrace the innovation, secure your wealth, and build a brighter tomorrow.</p>
+
+    <a class="discover" href="#">Discover Now
+      <span class="circle"><svg viewBox="0 0 48 24" aria-hidden="true"><path d="M2 12h42M34 3l10 9-10 9" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
+    </a>
+
+    <aside class="glass">
+      <svg class="glass-shape" viewBox="0 0 455 273" preserveAspectRatio="none" aria-hidden="true">
+        <defs><clipPath id="glassClip" clipPathUnits="objectBoundingBox">
+          <path d="M.0615 0H.3516Q.3956 0 .4088 .0513Q.422 .1209 .4703 .1209H.9385Q1 .1209 1 .2234V.8974Q1 1 .9385 1H.0615Q0 1 0 .8974V.1026Q0 0 .0615 0Z"/>
+        </clipPath></defs>
+        <path d="M28 0H160Q180 0 186 14Q192 33 214 33H427Q455 33 455 61V245Q455 273 427 273H28Q0 273 0 245V28Q0 0 28 0Z"/>
+      </svg>
+      <svg class="burst glass-burst" viewBox="-50 -50 100 100" aria-hidden="true"></svg>
+      <a class="pill outline get" href="#">Get started</a>
+      <p>Explore our comprehensive resources and educational materials to master the world of cryptocurrency. Stay ahead with expert insights, market analysis, and real-time updates.</p>
+    </aside>
+   </div>
+  </main>
+
+  <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    } }
+  </script>
+  <script type="module" src="main.js?v=15"></script>
+</body>
+</html>

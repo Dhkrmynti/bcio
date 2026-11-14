@@ -1,0 +1,179 @@
+:root {
+  --page: #e2e2ea;
+  --card: #ececf2;
+  --ink: #23260f;
+  --text: #17180f;
+  --line: #2a2c1a;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  color: var(--text);
+  font-family: 'Inter Tight', system-ui, sans-serif;
+  background: var(--card);
+  overflow: hidden;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+/* Halaman = satu layar penuh, tanpa scroll.
+   --ux: 1% lebar layar   (untuk posisi kiri-kanan)
+   --uy: 1/60.3 tinggi layar (untuk posisi atas-bawah; desain aslinya 100 x 60.3)
+   --u : yang lebih kecil dari keduanya (untuk ukuran huruf & objek, supaya tidak meluber) */
+.card {
+  --ux: 1vw;
+  --uy: calc(100svh / 60.3);
+  --u: min(var(--ux), var(--uy));
+  position: relative;
+  width: 100vw; height: 100svh;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 70% at 30% 20%, #f3f3f8 0%, transparent 70%),
+    linear-gradient(180deg, #eeeef4 0%, #e7e7ee 100%);
+}
+.frame { position: absolute; inset: 0; }
+
+/* ---------- lapisan ---------- */
+.crypto { z-index: 1; }
+#stage { z-index: 2; }
+.nav, .eyebrow, .lede, .discover, .glass { z-index: 3; }
+
+.anchor { position: absolute; pointer-events: none; }
+.a-ball { left: calc(59.5 * var(--ux) - 36.2 * var(--u)); top: calc(19.5 * var(--uy)); width: calc(72.4 * var(--u)); height: calc(72.4 * var(--u)); }
+.a-spring { left: calc(10.4 * var(--ux)); top: calc(-1.5 * var(--uy)); width: calc(11 * var(--u));  height: calc(7.5 * var(--u)); }
+.a-wave   { left: calc(88.5 * var(--ux)); top: calc(25.5 * var(--uy)); width: calc(11.5 * var(--u)); height: calc(22.5 * var(--u)); }
+.a-ring   { left: calc(4.4 * var(--ux));  top: calc(47.5 * var(--uy)); width: calc(19 * var(--u));  height: calc(19 * var(--u)); }
+
+#stage { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; pointer-events: none; opacity: 0; }
+
+/* ---------- navigasi ---------- */
+.nav {
+  position: absolute; left: calc(5.4 * var(--ux)); right: calc(5.4 * var(--ux)); top: calc(1.5 * var(--uy));
+  height: calc(3.3 * var(--u));
+  display: flex; align-items: center;
+  font-size: calc(1.04 * var(--u)); font-weight: 500; letter-spacing: .01em; text-transform: uppercase;
+}
+.logo { font-weight: 800; font-size: calc(1.22 * var(--u)); letter-spacing: .04em; }
+.links { position: absolute; left: calc(14.8 * var(--ux)); display: flex; align-items: center; height: 100%; gap: calc(3.1 * var(--ux)); }
+.links > * { white-space: nowrap; text-transform: uppercase; display: inline-flex; align-items: center; gap: calc(1.2 * var(--u)); }
+.dropdown svg { width: calc(1.3 * var(--u)); height: calc(1.3 * var(--u)); }
+.links a:hover, .dropdown:hover { opacity: .65; }
+
+.auth { position: absolute; right: 0; display: flex; gap: calc(0.55 * var(--u)); }
+.pill {
+  display: inline-grid; place-items: center;
+  height: calc(3.3 * var(--u)); border-radius: 99px;
+  font-weight: 700; font-size: calc(1.04 * var(--u)); text-transform: uppercase; letter-spacing: .01em;
+  transition: transform .2s, background-color .2s, color .2s;
+}
+.pill:hover { transform: translateY(-1px); }
+.pill.ghost { width: calc(9.65 * var(--u)); border: 1px solid #8b8b96; background: #f7f7fa; }
+.pill.solid { width: calc(9.4 * var(--u)); background: var(--ink); color: #f5f5f0; }
+.burger { display: none; }
+
+/* ---------- judul ---------- */
+.eyebrow {
+  position: absolute; left: calc(5.4 * var(--ux)); top: calc(9.4 * var(--uy)); margin: 0;
+  display: flex; align-items: center; gap: calc(1.1 * var(--u));
+  font-size: calc(2.56 * var(--u)); font-weight: 600; letter-spacing: -.005em; line-height: 1; text-transform: uppercase;
+}
+.burst { width: calc(2.9 * var(--u)); height: calc(2.9 * var(--u)); color: var(--ink); flex: none; }
+
+/* lebar huruf (font-stretch) diatur main.js supaya CRYPTO selalu memenuhi baris */
+.crypto {
+  position: absolute; left: calc(4.9 * var(--ux)); top: calc(9.6 * var(--uy)); margin: 0;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 900; font-stretch: 91%;
+  font-size: calc(22.4 * var(--u)); line-height: 1; letter-spacing: -.03em;
+  color: var(--ink);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .5s;
+}
+.crypto.ready { opacity: 1; }
+
+.lede {
+  position: absolute; left: calc(5.4 * var(--ux)); top: calc(34.6 * var(--uy)); margin: 0;
+  width: calc(29.5 * var(--u));
+  font-size: calc(1.24 * var(--u)); line-height: 1.22; font-weight: 500;
+}
+
+.discover {
+  position: absolute; left: calc(5.4 * var(--ux)); top: calc(41.4 * var(--uy));
+  display: flex; align-items: center; gap: calc(2.2 * var(--u));
+  font-size: calc(1.43 * var(--u)); font-weight: 600;
+}
+.circle {
+  width: calc(5.6 * var(--u)); height: calc(5.6 * var(--u)); border-radius: 50%;
+  border: 1px solid var(--line);
+  display: grid; place-items: center;
+  transition: background-color .25s, color .25s;
+}
+.circle svg { width: calc(2.4 * var(--u)); }
+.discover:hover .circle { background: var(--ink); color: #fff; }
+
+/* ---------- kartu kaca ---------- */
+.glass {
+  position: absolute; left: calc(50.15 * var(--ux)); top: calc(39.8 * var(--uy)); width: calc(25.05 * var(--u)); height: calc(15.03 * var(--u));
+}
+.glass::before {
+  content: ''; position: absolute; inset: 0;
+  clip-path: url(#glassClip);
+  background: linear-gradient(160deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, .28));
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  backdrop-filter: blur(14px) saturate(1.15);
+}
+.glass-shape { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.glass-shape path { fill: none; stroke: rgba(255, 255, 255, .75); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.glass-burst { position: absolute; left: calc(2.2 * var(--u)); top: calc(0.9 * var(--u)); width: calc(4.4 * var(--u)); height: calc(4.4 * var(--u)); }
+.get {
+  position: absolute; left: calc(10.85 * var(--u)); top: calc(2.5 * var(--u)); width: calc(12 * var(--u)); height: calc(2.75 * var(--u));
+  border: 1px solid var(--line); font-size: calc(0.98 * var(--u)); font-weight: 600;
+}
+.get:hover { background: var(--ink); color: #fff; }
+.glass p {
+  position: absolute; left: calc(2.2 * var(--u)); right: calc(1.6 * var(--u)); top: calc(6.9 * var(--u)); margin: 0;
+  font-size: calc(1.14 * var(--u)); line-height: 1.27; font-weight: 500;
+}
+
+/* ---------- layar kecil: susun vertikal ---------- */
+.glass > :not(.glass-shape) { position: absolute; z-index: 1; }
+@media (max-width: 760px) {
+  body { overflow: auto; }
+  .card { height: auto; min-height: 100svh; }
+  .frame {
+    position: relative; inset: auto; width: 100%;
+    display: flex; flex-direction: column;
+    padding: 18px 20px 24px;
+  }
+  .frame > * { position: relative; left: auto; right: auto; top: auto; }
+  #stage { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  .a-wave, .a-ring { display: none; }
+  .a-spring { position: absolute; left: 52%; top: -12px; width: 34%; height: 70px; }
+
+  .nav { order: 1; height: 44px; font-size: 13px; }
+  .logo { font-size: 16px; }
+  .links, .auth { display: none; }
+  .burger { display: grid; gap: 6px; margin-left: auto; width: 44px; height: 44px; place-content: center; border-radius: 50%; background: var(--ink); }
+  .burger span { width: 18px; height: 2px; background: #fff; }
+
+  .eyebrow { order: 2; margin-top: 26px; font-size: 14px; gap: 10px; }
+  .burst { width: 22px; height: 22px; }
+  .crypto { order: 3; font-size: calc((100vw - 64px) / 4.12); margin: 4px 0 0 -2px; }
+  .lede { order: 4; width: auto; margin-top: 14px; font-size: 16px; line-height: 1.4; }
+  .discover { order: 5; margin-top: 22px; font-size: 17px; gap: 14px; }
+  .circle { width: 52px; height: 52px; } .circle svg { width: 22px; }
+
+  .a-ball { order: 6; position: relative; left: auto; top: auto; width: 116%; height: auto; aspect-ratio: 1; margin: 10px 0 0 -8%; }
+  .glass { order: 7; width: 100%; height: auto; margin-top: -22%; padding: 74px 20px 22px; }
+  .glass > :not(.glass-shape) { position: absolute; }
+  .glass-burst { left: 18px; top: 10px; width: 46px; height: 46px; }
+  .get { left: auto; right: 16px; top: 22px; width: 150px; height: 40px; font-size: 13px; }
+  .glass > p:not(.glass-shape) { position: relative; left: auto; right: auto; top: auto; font-size: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

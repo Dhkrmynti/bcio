@@ -1,0 +1,41 @@
+# BCIO
+
+Landing page kripto dengan bola koin emas 3D yang dibuat di Blender dan berputar terus (looping).
+
+## Menjalankan
+
+```bash
+cd web && python3 -m http.server 5190
+```
+
+Buka http://localhost:5190.
+
+## Isi proyek
+
+| Path | Isi |
+|---|---|
+| `blender/build_coinball.py` | Script Blender. Membuat 13 desain koin (tepi bergerigi, bingkai timbul, relief di dua sisi), menyusunnya jadi bola tumpukan sisik yang rapat (koin saling menimpa tanpa tembus, celah diisi koin yang diselipkan di bawah, teks koin tegak), lalu memberi animasi putar 20 detik yang looping |
+| `blender/coinball.blend` | Hasil scene Blender, bisa dibuka dan diedit langsung |
+| `web/assets/coinball.glb` | Model + animasi yang dipakai di web |
+| `web/assets/coinball-poster.png` | Render Cycles untuk preview (tidak dipakai di halaman) |
+| `web/index.html`, `style.css`, `main.js` | Halaman. Bola koin dirender pakai three.js, hiasan putih (pegas, gelombang, cincin) dibuat langsung di three.js |
+
+## Membuat ulang bola koin
+
+```bash
+blender -b -P blender/build_coinball.py               # model + render poster
+blender -b -P blender/build_coinball.py -- --no-render  # model saja (lebih cepat)
+```
+
+Yang bisa diubah di script:
+- `DESIGNS`: desain koin dan seberapa sering tiap desain muncul.
+- `N`, `R_BASE`: jumlah koin utama dan jari-jari bola. Ukuran koin ada di `random.uniform(0.74, 0.92)`.
+- `scene.frame_end`: kecepatan putar. 480 frame = 20 detik.
+
+Setelah membuat ulang model, naikkan angka `?v=` di `web/index.html` supaya browser tidak memakai file lama dari cache.
+
+## Catatan
+
+- Koin saham hanya memakai ticker (AAPL, TSLA, AMZN, META, NVDA, QQQ), tanpa logo perusahaan, karena logo itu merek dagang.
+- Simbol kripto dibuat versi geometris sederhana, bukan logo resminya.
+- Posisi semua objek 3D mengikuti elemen penanda `.anchor` di CSS. Untuk memindahkan bola atau hiasan, cukup ubah CSS-nya.
