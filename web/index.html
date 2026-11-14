@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BCIO — Unlock the Future with Crypto</title>
-  <meta name="description" content="Step into the future. Learn crypto with BCIO.">
+  <title>BCIO — AI Terminal for Stocks &amp; Crypto</title>
+  <meta name="description" content="BCIO: the AI agent terminal for stocks and crypto on Robinhood Chain. Cross-asset signals, 24/7, one-click baskets.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=15">
-  <link rel="preload" href="assets/coinball.glb?v=15" as="fetch" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=27">
+  <link rel="preload" href="assets/coinball.glb?v=18" as="fetch" crossorigin>
 </head>
 <body>
-  <main class="card" id="card">
+  <main class="card slide" id="card" data-coin="BTC">
    <div class="frame">
     <!-- penanda posisi objek 3D; JS membaca posisi & ukurannya -->
     <div class="anchor a-ball" data-anchor="ball"></div>
@@ -27,25 +27,29 @@
     <header class="nav">
       <a class="logo" href="#">BCIO</a>
       <nav class="links" aria-label="Main">
-        <a href="#">About us</a>
-        <button class="dropdown" type="button" aria-expanded="false">Cryptocurrency education
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-        </button>
-        <a href="#">Cryptocurrency market</a>
-        <a href="#">FAQ</a>
+        <a href="#sync">Engine</a>
+        <div class="menu-wrap">
+          <button class="dropdown" type="button" aria-expanded="false" aria-controls="agent-menu">AI agent
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          </button>
+          <div class="menu" id="agent-menu" hidden>
+            <a href="#agent"><b>How the agent works</b><span>Prompt, 3 MCP servers, one basket</span></a>
+            <a href="#always"><b>Weekend Shield</b><span>Hedges stock tokens while Wall Street is closed</span></a>
+            <a href="#grow"><b>Auto-rebalancer</b><span>Keeps your target weights within limits you set</span></a>
+            <a href="terminal.html"><b>Launch terminal</b><span>Talk to the agent with live data</span></a>
+          </div>
+        </div>
+        <a href="#always">24/7 markets</a>
+        <a href="#faq">FAQ</a>
       </nav>
-      <div class="auth">
-        <a class="pill ghost" href="#">Sign up</a>
-        <a class="pill solid" href="#">Sign in</a>
-      </div>
-      <button class="burger" type="button" aria-label="Menu"><span></span><span></span></button>
+      <button class="burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span></button>
     </header>
 
     <p class="eyebrow"><svg class="burst" viewBox="-50 -50 100 100" aria-hidden="true"></svg>Unlock the future with</p>
 
-    <p class="lede">Step into the future. Empower yourself with crypto currency! Embrace the innovation, secure your wealth, and build a brighter tomorrow.</p>
+    <p class="lede">The AI terminal for stocks and crypto on Robinhood Chain. NVDA, TSLA, QQQ, BTC and altcoins, read together 24/7.</p>
 
-    <a class="discover" href="#">Discover Now
+    <a class="discover" href="#show">Discover Now
       <span class="circle"><svg viewBox="0 0 48 24" aria-hidden="true"><path d="M2 12h42M34 3l10 9-10 9" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
     </a>
 
@@ -57,11 +61,169 @@
         <path d="M28 0H160Q180 0 186 14Q192 33 214 33H427Q455 33 455 61V245Q455 273 427 273H28Q0 273 0 245V28Q0 0 28 0Z"/>
       </svg>
       <svg class="burst glass-burst" viewBox="-50 -50 100 100" aria-hidden="true"></svg>
-      <a class="pill outline get" href="#">Get started</a>
-      <p>Explore our comprehensive resources and educational materials to master the world of cryptocurrency. Stay ahead with expert insights, market analysis, and real-time updates.</p>
+      <a class="pill outline get" href="terminal.html">Launch terminal</a>
+      <p>AI agents linked through MCP watch earnings, macro and on-chain flow around the clock, then hand you one basket to approve. Stocks and crypto, one signature.</p>
     </aside>
    </div>
   </main>
+
+  <!-- 1. semua aset: saham & kripto dalam satu terminal -->
+  <section class="show slide" id="show" data-coin="BTC" aria-labelledby="show-h">
+    <div class="pin">
+      <h2 class="sr-only" id="show-h">Every asset in one terminal: Bitcoin, Nvidia, Ethereum, Tesla, Solana, QQQ</h2>
+      <p class="kicker"><svg class="burst" viewBox="-50 -50 100 100" aria-hidden="true"></svg>Stocks + crypto, one terminal</p>
+      <div class="show-words" aria-hidden="true">
+        <span class="show-word on" data-tag="Crypto · 24/7">BITCOIN</span>
+        <span class="show-word" data-tag="Stock token · 24/7">NVIDIA</span>
+        <span class="show-word" data-tag="Crypto · 24/7">ETHEREUM</span>
+        <span class="show-word" data-tag="Stock token · 24/7">TESLA</span>
+        <span class="show-word" data-tag="Altcoin · 24/7">SOLANA</span>
+        <span class="show-word" data-tag="Index token · 24/7">QQQ</span>
+      </div>
+      <canvas class="stage3d" aria-hidden="true"></canvas>
+      <div class="show-meta" aria-hidden="true"><span class="show-idx">01</span><span class="show-of">/ 06</span></div>
+      <p class="show-tag" aria-hidden="true">Crypto · 24/7</p>
+      <div class="show-bar" aria-hidden="true"><i></i></div>
+    </div>
+  </section>
+
+  <!-- 2. korelasi: inti engine -->
+  <section class="sync slide" id="sync" data-coin="NVDA" aria-labelledby="sync-h">
+    <div class="pin">
+      <canvas class="stage3d" aria-hidden="true"></canvas>
+      <p class="kicker"><svg class="burst" viewBox="-50 -50 100 100" aria-hidden="true"></svg>Correlation engine</p>
+      <h2 class="sync-word" id="sync-h">READ THEM<br>TOGETHER</h2>
+      <figure class="sync-chart" aria-label="Demo chart: Bitcoin follows Nvidia with a lag; the engine finds the lag and the correlation">
+        <svg viewBox="0 0 1000 360" preserveAspectRatio="none">
+          <defs><clipPath id="syncClip"><rect x="0" y="0" width="1000" height="360"/></clipPath></defs>
+          <g class="sync-grid"></g>
+          <g clip-path="url(#syncClip)">
+            <path class="ln ln-a"/>
+            <path class="ln ln-b"/>
+          </g>
+          <g class="sync-lag"><line class="lag-line"/><text class="lag-text" text-anchor="middle"></text></g>
+        </svg>
+        <figcaption class="sync-legend"><span class="k-a">NVDA</span><span class="k-b">BTC</span><span class="demo">Demo data</span></figcaption>
+      </figure>
+      <div class="sync-stats" aria-hidden="true">
+        <div><b class="sync-rho">0.00</b><span>Correlation</span></div>
+        <div><b class="sync-lagv">0 min</b><span>BTC lag</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 24/7: bursa tutup, agent tetap jalan -->
+  <section class="always slide" id="always" data-coin="ETH" aria-labelledby="always-h">
+    <div class="pin">
+      <p class="kicker"><svg class="burst" viewBox="-50 -50 100 100" aria-hidden="true"></svg>Weekend &amp; after-hours</p>
+      <h2 class="always-word" id="always-h">NEVER CLOSED</h2>
+      <div class="week" aria-hidden="true"></div>
+      <div class="always-stats">
+        <div class="st-ws"><b>32.5</b><span>hrs / week<br>Wall Street</span></div>
+        <div class="st-rh"><b class="always-count">0</b><span>hrs / week<br>Robinhood Chain + agent</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. agent: prompt -> MCP -> sinyal -> basket -->
+  <section class="agent slide" id="agent" data-coin="SOL" aria-labelledby="agent-h">
+    <div class="pin">
+      <canvas class="stage3d" aria-hidden="true"></canvas>
+      <p class="kicker"><svg class="burst" viewBox="-50 -50 100 100" aria-hidden="true"></svg>AI agent · MCP</p>
+      <h2 class="agent-word" id="agent-h">ASK.<br>APPROVE.</h2>
+      <div class="term" role="img" aria-label="Demo: the user asks the agent to split 1,000 USDC into TSLA and SOL if Tesla beats earnings and Bitcoin holds support; three MCP servers check the data and the agent returns a basket to approve">
+        <div class="term-bar"><i></i><i></i><i></i><span>bcio terminal</span><em>demo</em></div>
+        <p class="term-prompt"><span class="caret">&gt;</span> <span class="typed"></span><span class="cursor"></span></p>
+        <ul class="mcp">
+          <li><span class="dot"></span>TradFi MCP<small>earnings · macro</small></li>
+          <li><span class="dot"></span>Crypto MCP<small>BTC · altcoins · flow</small></li>
+          <li><span class="dot"></span>Execution MCP<small>route · bridge · swap</small></li>
+        </ul>
+        <div class="signal">
+          <b>Signal</b>
+          <span>TSLA beat <i>+6.2% AH</i></span>
+          <span>BTC above support</span>
+          <span>Confidence <i>0.78</i></span>
+        </div>
+        <div class="basket">
+          <div class="leg"><span>TSLA</span><div class="bar"><i style="--w:50%"></i></div><em>50%</em></div>
+          <div class="leg"><span>SOL</span><div class="bar"><i style="--w:50%"></i></div><em>50%</em></div>
+          <p class="route">USDC · Solana → Robinhood Chain · 1 signature</p>
+          <button class="approve" type="button" tabindex="-1">Approve basket</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. basket: saham + kripto dalam satu tanda tangan -->
+  <section class="grow slide" id="grow" data-coin="TSLA" aria-labelledby="grow-h">
+    <div class="pin">
+      <h2 class="grow-word" id="grow-h">ONE BASKET</h2>
+      <p class="grow-line">Stocks + crypto. One signature.</p>
+      <canvas class="stage3d" aria-hidden="true"></canvas>
+    </div>
+  </section>
+
+  <!-- 3. CTA: hujan koin -->
+  <!-- FAQ singkat -->
+  <section class="faq" id="faq" aria-labelledby="faq-h">
+    <p class="kicker"><svg class="burst" viewBox="-50 -50 100 100" aria-hidden="true"></svg>FAQ</p>
+    <h2 class="faq-word" id="faq-h">GOOD<br>QUESTIONS</h2>
+    <div class="faq-list">
+      <details>
+        <summary>What is BCIO?</summary>
+        <p>An AI agent terminal that reads stock tokens (NVDA, TSLA, QQQ) and crypto (BTC, ETH, SOL, AI coins) together. It finds correlations and lags, then builds a basket you can approve with one signature.</p>
+      </details>
+      <details>
+        <summary>Does the agent hold my funds?</summary>
+        <p>No. You sign every basket in your own wallet. Automations (Weekend Shield, rebalancer) only run inside limits you set on-chain: max per trade, max per day and an expiry. You can revoke the agent at any time.</p>
+      </details>
+      <details>
+        <summary>Are stock tokens the same as shares?</summary>
+        <p>No. Stock tokens are tokenized exposure on Robinhood Chain, not shares. On the current testnet the terminal trades test tokens priced from live market data.</p>
+      </details>
+      <details>
+        <summary>Which network does it run on?</summary>
+        <p>Robinhood Chain testnet (chain id 46630). No real money is involved yet.</p>
+      </details>
+      <details>
+        <summary>Is this financial advice?</summary>
+        <p>No. The agent shows data and builds suggestions. The numbers on this page are demo data, and correlations describe the past, not the future.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="start slide" id="start" data-coin="QQQ" aria-labelledby="start-h">
+    <canvas class="stage3d" aria-hidden="true"></canvas>
+    <div class="start-inner">
+      <p class="kicker"><svg class="burst" viewBox="-50 -50 100 100" aria-hidden="true"></svg>Robinhood Chain · 24/7</p>
+      <h2 class="start-word" id="start-h">START<br>NOW</h2>
+      <div class="start-cta">
+        <a class="pill solid big" href="terminal.html">Launch terminal</a>
+        <a class="discover inline" href="#sync">How it works
+          <span class="circle"><svg viewBox="0 0 48 24" aria-hidden="true"><path d="M2 12h42M34 3l10 9-10 9" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
+        </a>
+      </div>
+    </div>
+    <footer class="foot">
+      <span class="logo">BCIO</span>
+      <nav aria-label="Footer"><a href="#sync">Engine</a><a href="#agent">Agent</a><a href="#faq">FAQ</a><a href="terminal.html">Terminal</a></nav>
+      <span>Demo data. Not financial advice. &copy; 2026 BCIO</span>
+    </footer>
+  </section>
+
+
+  <!-- menu HP -->
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <button class="mm-close" type="button" aria-label="Close menu">&times;</button>
+    <nav aria-label="Mobile">
+      <a href="#sync">Engine</a>
+      <a href="#agent">AI agent</a>
+      <a href="#always">24/7 markets</a>
+      <a href="#faq">FAQ</a>
+      <a class="pill solid big" href="terminal.html">Launch terminal</a>
+    </nav>
+  </div>
 
   <script type="importmap">
     { "imports": {
@@ -69,6 +231,7 @@
         "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
     } }
   </script>
-  <script type="module" src="main.js?v=15"></script>
+  <script type="module" src="main.js?v=23"></script>
+  <script type="module" src="sections.js?v=16"></script>
 </body>
 </html>

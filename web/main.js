@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { studioScene, makeWear, tuneGold } from './gold.js?v=19';
 
 // ---------- ikon starburst (dipakai di judul & kartu kaca) ----------
 const rays = Array.from({ length: 18 }, (_, i) => {
@@ -26,22 +27,29 @@ try {
   // tanpa WebGL: gambar render Blender tetap tampil
   throw new Error('WebGL tidak tersedia');
 }
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environment = pmrem.fromScene(studioScene(), 0.02).texture;
+const wear = makeWear();
 
 const camera = new THREE.PerspectiveCamera(22, 1, 1, 400);
 camera.position.set(0, 0, 100);
 
 // cahaya hangat untuk kilau emas
-const key = new THREE.DirectionalLight(0xffd99a, 3.4);
+const key = new THREE.DirectionalLight(0xffe2b0, 2.6);
 key.position.set(-30, 40, 60);
+key.castShadow = true;
+key.shadow.mapSize.set(4096, 4096);
+key.shadow.bias = -0.0004;
 scene.add(key);
+scene.add(key.target);
 const rim = new THREE.DirectionalLight(0xffe2a8, 2.4);
 rim.position.set(40, 10, -30);
 scene.add(rim);
@@ -134,6 +142,15 @@ function layoutBall() {
   const b = anchors.ball;
   holder.position.set(b.x, b.y, 0);
   holder.scale.setScalar(b.w / 2 / ballRadius);
+  // kamera bayangan mengikuti bola
+  const R = b.w / 2 * 1.15;
+  key.target.position.set(b.x, b.y, 0);
+  key.position.set(b.x - 0.45 * R * 3, b.y + 0.6 * R * 3, R * 3);
+  const sc = key.shadow.camera;
+  sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R;
+  sc.near = 0.1; sc.far = R * 7;
+  sc.updateProjectionMatrix();
+  key.shadow.normalBias = R * 0.004;
 }
 
 
@@ -155,16 +172,34 @@ function instance(root) {
     groups.get(key).mats.push(rel);
   }
   for (const mesh of meshes) mesh.parent.remove(mesh);
+  // koin yang terselip lebih dalam dapat cahaya lebih sedikit (oklusi sederhana)
+  const pos = new THREE.Vector3();
+  let rMin = Infinity, rMax = 0;
+  for (const g of groups.values()) for (const m of g.mats) {
+    const r = pos.setFromMatrixPosition(m).length();
+    rMin = Math.min(rMin, r); rMax = Math.max(rMax, r);
+  }
+  // abaikan koin hero yang jauh lebih tinggi
+  rMax = Math.min(rMax, rMin + (rMax - rMin) * 0.55);
+  const col = new THREE.Color();
   for (const g of groups.values()) {
     const im = new THREE.InstancedMesh(g.geometry, g.material, g.mats.length);
-    g.mats.forEach((mat, i) => im.setMatrixAt(i, mat));
+    im.castShadow = im.receiveShadow = true;
+    g.mats.forEach((mat, i) => {
+      im.setMatrixAt(i, mat);
+      const t = THREE.MathUtils.clamp((pos.setFromMatrixPosition(mat).length() - rMin) / (rMax - rMin), 0, 1);
+      const k = 0.4 + 0.6 * Math.pow(t, 0.8);
+      im.setColorAt(i, col.setRGB(k, k, k));
+    });
+    if (im.instanceColor) im.instanceColor.needsUpdate = true;
     im.instanceMatrix.needsUpdate = true;
     im.computeBoundingSphere();
     g.ballNode.add(im);
   }
 }
 
-new GLTFLoader().load('assets/coinball.glb?v=15', (gltf) => {
+const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+new GLTFLoader().setDRACOLoader(draco).load('assets/coinball.glb?v=18', (gltf) => {
   const root = gltf.scene;
   // jari-jari = rata-rata setengah sisi kotak pembatas (bukan diagonal kotak)
   const box = new THREE.Box3().setFromObject(root);
@@ -173,14 +208,8 @@ new GLTFLoader().load('assets/coinball.glb?v=15', (gltf) => {
   ballRadius = (size.x + size.y + size.z) / 6;
   root.traverse((o) => {
     if (o.isMesh) {
-      o.material.envMapIntensity = 1.25;
-      if (o.material.name === 'GoldBright') {
-        o.material.color.setRGB(1.0, 0.6, 0.16);
-        o.material.roughness = 0.2;
-      } else if (o.material.name === 'GoldDark') {
-        o.material.color.setRGB(0.32, 0.19, 0.05);
-        o.material.roughness = 0.42;
-      }
+      tuneGold(o.material, wear);
+      o.castShadow = o.receiveShadow = true;
     }
   });
   tilt.add(root);
@@ -203,6 +232,8 @@ addEventListener('pointermove', (e) => {
 });
 
 // ---------- loop ----------
+let heroVisible = true;
+new IntersectionObserver(([e]) => { heroVisible = e.isIntersecting; }).observe(card);
 const clock = new THREE.Clock();
 function frame() {
   const dt = Math.min(clock.getDelta(), 0.05);
@@ -222,7 +253,7 @@ function frame() {
     deco.ring.rotation.z = 0.2 + Math.sin(t * 0.4) * 0.12;
     deco.ring.position.y = anchors.ring.y + Math.sin(t * 0.8) * 0.15;
   }
-  renderer.render(scene, camera);
+  if (heroVisible) renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
 
@@ -252,3 +283,29 @@ new ResizeObserver(relayout).observe(card);
 new ResizeObserver(relayout).observe(canvas);
 relayout();
 frame();
+
+// ---------- menu: dropdown "AI agent" & menu HP ----------
+const dd = document.querySelector('.dropdown');
+const ddMenu = document.getElementById('agent-menu');
+const setDD = (open) => { dd.setAttribute('aria-expanded', String(open)); ddMenu.hidden = !open; };
+dd.addEventListener('click', (e) => { e.stopPropagation(); setDD(ddMenu.hidden); });
+ddMenu.addEventListener('click', () => setDD(false));
+document.addEventListener('click', (e) => { if (!ddMenu.hidden && !e.target.closest('.menu-wrap')) setDD(false); });
+
+const burger = document.querySelector('.burger');
+const mm = document.getElementById('mobile-menu');
+const setMM = (open) => {
+  mm.hidden = !open;
+  burger.setAttribute('aria-expanded', String(open));
+  document.body.style.overflow = open ? 'hidden' : '';
+  if (open) mm.querySelector('.mm-close').focus(); else burger.focus();
+};
+burger.addEventListener('click', () => setMM(true));
+mm.querySelector('.mm-close').addEventListener('click', () => setMM(false));
+mm.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setMM(false)));
+
+addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (!ddMenu.hidden) { setDD(false); dd.focus(); }
+  if (!mm.hidden) setMM(false);
+});

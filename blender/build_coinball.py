@@ -42,56 +42,68 @@ def gold(name, color, rough):
     b.inputs["Roughness"].default_value = rough
     return m
 
-MAT_BRIGHT = gold("GoldBright", (1.0, 0.66, 0.22), 0.2)
-MAT_DARK = gold("GoldDark", (0.17, 0.10, 0.035), 0.5)
+MAT_BRIGHT = gold("GoldBright", (1.0, 0.70, 0.30), 0.16)   # bingkai & tepi: dipoles
+MAT_DARK = gold("GoldDark", (0.92, 0.58, 0.20), 0.06)     # bidang: cermin
+MAT_FROST = gold("GoldFrost", (1.0, 0.72, 0.32), 0.34)    # relief: doff/frosted
+MAT_CORE = gold("GoldCore", (0.12, 0.07, 0.025), 0.6)     # inti: gelap seperti bayangan
 
 # ---------------------------------------------------------------- dimensi koin
-SEG = 80          # segmen tepi (harus genap untuk gerigi)
+SEG = 600         # segmen tepi (genap): 300 gerigi rapat seperti koin tempa
 R_EDGE = 1.0
-R_REED = 0.982     # gerigi tepi
+R_REED = 0.988     # dasar gerigi
 R_FIELD = 0.86     # batas bingkai
 Z_RIM = 0.075
 Z_FIELD = 0.048
 RELIEF = 0.03      # tinggi relief di atas bidang
+BEVEL = 0.0045     # bevel relief supaya tepinya menangkap kilau
+
+# profil bingkai dari bidang ke tepi luar: (jari-jari, z, material)
+PROFILE = [
+    (R_FIELD, Z_FIELD, 1),
+    (R_FIELD + 0.006, Z_RIM - 0.012, 0),
+    (R_FIELD + 0.018, Z_RIM, 0),
+    (0.965, Z_RIM, 0),
+    (0.985, Z_RIM - 0.008, 0),
+]
 
 
 def coin_base():
-    """Koin dasar: tepi bergerigi, bingkai timbul, bidang tengah agak cekung. Dua sisi."""
+    """Koin dasar: tepi bergerigi halus, bingkai timbul ber-bevel, bidang tengah. Dua sisi."""
     bm = bmesh.new()
     rings = {}
     for side, s in (("top", 1), ("bot", -1)):
-        edge, rim_in, field = [], [], []
+        rows = []
+        for r, z, _m in PROFILE:
+            rows.append([bm.verts.new((r * math.cos(2 * math.pi * i / SEG), r * math.sin(2 * math.pi * i / SEG), s * z))
+                         for i in range(SEG)])
+        edge = []
         for i in range(SEG):
             a = 2 * math.pi * i / SEG
             r = R_EDGE if i % 2 == 0 else R_REED
-            edge.append(bm.verts.new((r * math.cos(a), r * math.sin(a), s * Z_RIM)))
-            rim_in.append(bm.verts.new((R_FIELD * math.cos(a), R_FIELD * math.sin(a), s * Z_RIM)))
-            field.append(bm.verts.new((R_FIELD * math.cos(a), R_FIELD * math.sin(a), s * Z_FIELD)))
-        rings[side] = (edge, rim_in, field)
-
-    def quad(a, b, c, d, mat):
-        f = bm.faces.new((a, b, c, d))
-        f.material_index = mat
-        return f
+            edge.append(bm.verts.new((r * math.cos(a), r * math.sin(a), s * (Z_RIM - 0.02))))
+        rows.append(edge)
+        rings[side] = rows
 
     for side in ("top", "bot"):
-        edge, rim_in, field = rings[side]
-        for i in range(SEG):
-            j = (i + 1) % SEG
-            quad(edge[i], edge[j], rim_in[j], rim_in[i], 0)       # permukaan bingkai
-            quad(rim_in[i], rim_in[j], field[j], field[i], 0)     # dinding bingkai
-        f = bm.faces.new(field)                                   # bidang tengah
+        rows = rings[side]
+        for k in range(len(rows) - 1):
+            mat = 0
+            for i in range(SEG):
+                j = (i + 1) % SEG
+                f = bm.faces.new((rows[k][i], rows[k][j], rows[k + 1][j], rows[k + 1][i]))
+                f.material_index = mat
+        f = bm.faces.new(rows[0])                                 # bidang tengah
         f.material_index = 1
-    et, eb = rings["top"][0], rings["bot"][0]
+    et, eb = rings["top"][-1], rings["bot"][-1]
     for i in range(SEG):
         j = (i + 1) % SEG
-        quad(et[i], eb[i], eb[j], et[j], 0)                       # sisi gerigi
+        bm.faces.new((et[i], eb[i], eb[j], et[j])).material_index = 0   # sisi gerigi
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     return bm
 
 
 # ---------------------------------------------------------------- bentuk relief
-def add_prism(bm, pts, z0=Z_FIELD, h=RELIEF, mat=0, h_left=None):
+def add_prism(bm, pts, z0=Z_FIELD, h=RELIEF, mat=2, h_left=None):
     """Poligon 2D diekstrusi ke atas dari bidang koin."""
     bot = [bm.verts.new((x, y, z0)) for x, y in pts]
     top = [bm.verts.new((x, y, z0 + (h if h_left is None or x >= 0 else h_left))) for x, y in pts]
@@ -102,10 +114,13 @@ def add_prism(bm, pts, z0=Z_FIELD, h=RELIEF, mat=0, h_left=None):
         faces.append(bm.faces.new((bot[i], bot[j], top[j], top[i])))
     for f in faces:
         f.material_index = mat
+    top_edges = list({e for e in faces[0].edges})
+    bmesh.ops.bevel(bm, geom=top_edges, offset=BEVEL, segments=2, profile=0.5,
+                    affect="EDGES", clamp_overlap=True)
     return faces
 
 
-def add_ring(bm, r_in, r_out, z0=Z_FIELD, h=RELIEF * 0.6, seg=56, mat=0):
+def add_ring(bm, r_in, r_out, z0=Z_FIELD, h=RELIEF * 0.6, seg=240, mat=0):
     vb_in, vb_out, vt_in, vt_out = [], [], [], []
     for i in range(seg):
         a = 2 * math.pi * i / seg
@@ -122,7 +137,7 @@ def add_ring(bm, r_in, r_out, z0=Z_FIELD, h=RELIEF * 0.6, seg=56, mat=0):
             bm.faces.new(q).material_index = mat
 
 
-def ellipse(cx, cy, rx, ry, rot=0.0, n=14):
+def ellipse(cx, cy, rx, ry, rot=0.0, n=24):
     c, s = math.cos(rot), math.sin(rot)
     out = []
     for i in range(n):
@@ -140,8 +155,11 @@ def text_mesh(body, size):
     cu.size = size
     cu.align_x = "CENTER"
     cu.align_y = "CENTER"
-    cu.extrude = RELIEF / 2
-    cu.resolution_u = 1
+    cu.extrude = RELIEF / 2 - BEVEL
+    cu.bevel_depth = BEVEL
+    cu.bevel_resolution = 2
+    cu.offset = -BEVEL * 0.6
+    cu.resolution_u = 5
     ob = bpy.data.objects.new("t", cu)
     scene.collection.objects.link(ob)
     dg = bpy.context.evaluated_depsgraph_get()
@@ -152,7 +170,7 @@ def text_mesh(body, size):
     return me, max(xs) - min(xs)
 
 
-def append_mesh(bm, me, matrix, mat=0):
+def append_mesh(bm, me, matrix, mat=2):
     me.transform(matrix)
     before = set(bm.faces)
     bm.from_mesh(me)
@@ -206,7 +224,7 @@ def add_laurel(bm, radius=0.68):
             tang = a + s * math.pi / 2
             for off in (-0.045, 0.045):
                 rr = radius + off
-                add_prism(bm, ellipse(rr * math.cos(a), rr * math.sin(a), 0.055, 0.022, tang + off * 10 * s, 8),
+                add_prism(bm, ellipse(rr * math.cos(a), rr * math.sin(a), 0.055, 0.022, tang + off * 10 * s, 18),
                           h=RELIEF * 0.7)
 
 
@@ -254,12 +272,12 @@ def g_cardano(bm):
     for count, r, size in ((6, 0.12, 0.045), (12, 0.27, 0.038), (6, 0.42, 0.03)):
         for i in range(count):
             a = 2 * math.pi * i / count + (math.pi / count if r > 0.2 else 0)
-            add_prism(bm, ellipse(r * math.cos(a), r * math.sin(a), size, size, 0, 12))
+            add_prism(bm, ellipse(r * math.cos(a), r * math.sin(a), size, size, 0, 28))
 
 
 def ticker(sym):
     def f(bm):
-        add_text(bm, sym, 0.36 if len(sym) > 3 else 0.42, 0.0, 0.08)
+        add_text(bm, sym, 0.27 if len(sym) > 3 else 0.32, 0.0, 0.08)
         add_bars(bm)
     return f
 
@@ -284,23 +302,37 @@ DESIGNS = [
 meshes = {}
 for key, label, glyph, laurel, _w in DESIGNS:
     # relief dibuat sekali, lalu dipasang di muka depan dan belakang
+    # Detail medali (manik, garis radial, tulisan melingkar, guilloche) dibuat sebagai
+    # tekstur normal di web (gold.js medalMaps), jadi geometri cukup simbol di tengah.
     em = bmesh.new()
-    add_ring(em, 0.815, 0.835)
-    add_arc_text(em, label, radius=0.665, size=0.15 if len(label) < 10 else 0.12)
     glyph(em)
-    if laurel:
-        add_laurel(em)
     relief = bpy.data.meshes.new("relief")
     em.to_mesh(relief)
     em.free()
+    # simbol diperkecil supaya muat di dalam cincin medali (r < 0.53)
+    relief.transform(Matrix.Diagonal((0.88, 0.88, 1.0, 1.0)))  # xy saja, tinggi relief tetap
     bm = coin_base()
     append_mesh(bm, relief.copy(), Matrix.Identity(4))
     append_mesh(bm, relief, Matrix.Rotation(math.pi, 4, "Y"))
+    # UV planar dari muka koin, dipakai tekstur goresan halus di web
+    # sisi belakang dicerminkan supaya tulisan medali terbaca benar dari kedua sisi
+    # buang UV bawaan mesh teks supaya UV medali jadi satu-satunya (TEXCOORD_0)
+    for old in list(bm.loops.layers.uv.values()):
+        bm.loops.layers.uv.remove(old)
+    uv = bm.loops.layers.uv.new("UVMap")
+    for f in bm.faces:
+        back = f.calc_center_median().z < 0
+        for lp in f.loops:
+            x = -lp.vert.co.x if back else lp.vert.co.x
+            lp[uv].uv = (x * 0.5 + 0.5, lp.vert.co.y * 0.5 + 0.5)
     me = bpy.data.meshes.new(f"Coin_{key}")
     bm.to_mesh(me)
     bm.free()
     me.materials.append(MAT_BRIGHT)
     me.materials.append(MAT_DARK)
+    me.materials.append(MAT_FROST)
+    me.shade_smooth()
+    me.set_sharp_from_angle(angle=math.radians(38))
     meshes[key] = me
 
 # ---------------------------------------------------------------- susunan bola (tumpukan sisik)
@@ -309,8 +341,9 @@ for key, label, glyph, laurel, _w in DESIGNS:
 # tepat di atas semua koin yang ditimpanya: tidak ada celah, tidak ada yang tembus.
 pool = [k for k, *_rest, w in DESIGNS for _ in range(w)]
 R_BASE = 6.6
-MARGIN = 0.012
-RIM = [(math.cos(2 * math.pi * k / 28), math.sin(2 * math.pi * k / 28)) for k in range(28)] + [(0.0, 0.0)]
+MARGIN = 0.003
+RIM = [(math.cos(2 * math.pi * k / 36), math.sin(2 * math.pi * k / 36)) for k in range(36)] + [(0.0, 0.0)] + \
+      [(0.5 * math.cos(2 * math.pi * k / 8), 0.5 * math.sin(2 * math.pi * k / 8)) for k in range(8)]
 
 ball = bpy.data.objects.new("CoinBall", None)
 scene.collection.objects.link(ball)
@@ -322,7 +355,7 @@ placed = []  # dict: c (pusat), u, v, n (sumbu lokal), s (jari-jari), h (setenga
 def lift(d, u, v, n, s, h):
     """Jarak terkecil dari pusat bola supaya koin baru berada di atas tetangganya."""
     r = R_BASE
-    for _ in range(3):
+    for _ in range(5):
         need = R_BASE
         c = d * r
         for cj in placed:
@@ -374,8 +407,8 @@ def put(c):
     return True
 
 
-N = 400
-MAX_LIFT = 0.42
+N = 460
+MAX_LIFT = 0.3
 golden = math.pi * (3 - math.sqrt(5))
 HERO_DIR = Vector((0.04, -1, 0.16)).normalized()
 coins = []
@@ -387,8 +420,8 @@ for i in range(N):
          + Vector((random.gauss(0, 0.035), random.gauss(0, 0.035), random.gauss(0, 0.035)))).normalized()
     if d.angle(HERO_DIR) < math.radians(5):
         continue
-    coins.append({"d": d, "s": random.uniform(0.74, 0.92), "key": random.choice(pool),
-                  "q": frame(d, random.uniform(2, 10), random.uniform(-22, 22)), "name": f"c.{i:03d}"})
+    coins.append({"d": d, "s": random.uniform(0.70, 0.86), "key": random.choice(pool),
+                  "q": frame(d, random.uniform(1, 5), random.uniform(-22, 22)), "name": f"c.{i:03d}"})
 
 # kelompokkan koin yang saling tumpang tindih ke lapisan berbeda (pewarnaan graf),
 # lalu letakkan lapis demi lapis: tumpukan jadi rapat tapi tidak makin tinggi
@@ -409,7 +442,7 @@ for i in sorted(range(len(coins)), key=lambda i: (color[i], random.random())):
             ok = True
             break
         # terlalu menonjol: coba koin lebih kecil & lebih datar
-        c = dict(c, s=c["s"] * 0.88, q=frame(c["d"], 2, random.uniform(-20, 20)))
+        c = dict(c, s=c["s"] * 0.88, q=frame(c["d"], 1, random.uniform(-20, 20)))
     skipped += not ok
 print("dilewati:", skipped)
 
@@ -417,7 +450,7 @@ print("dilewati:", skipped)
 def sink(d, u, v, n, s, h):
     """Jarak terbesar dari pusat supaya koin berada di bawah semua tetangganya."""
     r = R_BASE
-    for _ in range(3):
+    for _ in range(5):
         need = R_BASE + 0.3
         c = d * r
         for cj in placed:
@@ -443,11 +476,11 @@ def sink(d, u, v, n, s, h):
 
 
 def covered(d):
-    return any((p["c"].normalized() - d).length * R_BASE < p["s"] * 0.62 for p in placed)
+    return any((p["c"].normalized() - d).length * R_BASE < p["s"] * 0.5 for p in placed)
 
 
 cands = []
-M = 12000
+M = 20000
 for i in range(M):
     y = 1 - (i + 0.5) / M * 2
     rr = math.sqrt(1 - y * y)
@@ -458,13 +491,13 @@ fillers = 0
 for d in cands:
     if d.angle(HERO_DIR) < math.radians(10) or covered(d):
         continue
-    for s_try in (0.8, 0.66, 0.52, 0.42):
-        q = frame(d, random.uniform(0, 6), random.uniform(-20, 20))
+    for s_try in (0.8, 0.66, 0.52, 0.42, 0.34):
+        q = frame(d, random.uniform(0, 3), random.uniform(-20, 20))
         m = q.to_matrix()
         u, v, n = m.col[0].copy(), m.col[1].copy(), m.col[2].copy()
         h = (Z_RIM + 0.006) * s_try
         r = sink(d, u, v, n, s_try, h)
-        if r >= R_BASE - 0.62:
+        if r >= R_BASE - 0.4:
             placed.append({"c": d * r, "u": u, "v": v, "n": n, "s": s_try, "h": h})
             ob = bpy.data.objects.new(f"f.{fillers:03d}", meshes[random.choice(pool)])
             scene.collection.objects.link(ob)
@@ -485,13 +518,13 @@ print("jari-jari koin: min %.2f  median %.2f  max %.2f" % (rs[0], rs[len(rs) // 
 
 # inti gelap supaya tidak ada yang tembus pandang
 core_bm = bmesh.new()
-bmesh.ops.create_uvsphere(core_bm, u_segments=48, v_segments=24, radius=R_BASE - 0.7)
+bmesh.ops.create_uvsphere(core_bm, u_segments=96, v_segments=48, radius=R_BASE - 0.42)
 core_me = bpy.data.meshes.new("Core")
 core_bm.to_mesh(core_me)
 core_bm.free()
 for poly in core_me.polygons:
     poly.use_smooth = True
-core_me.materials.append(MAT_BRIGHT)
+core_me.materials.append(MAT_CORE)
 core = bpy.data.objects.new("Core", core_me)
 scene.collection.objects.link(core)
 core.parent = ball
@@ -576,6 +609,12 @@ bpy.ops.export_scene.gltf(
     use_selection=True,
     export_animations=True,
     export_yup=True,
+    export_normals=True,
+    export_draco_mesh_compression_enable=True,
+    export_draco_mesh_compression_level=7,
+    export_draco_position_quantization=16,
+    export_draco_normal_quantization=12,
+    export_draco_texcoord_quantization=12,
 )
 
 if DO_RENDER:

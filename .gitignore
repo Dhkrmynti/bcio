@@ -2,3 +2,12 @@
 *.blend1
 *.blend@
 __pycache__/
+.playwright-mcp/
+engine/.env
+engine/node_modules/
+.env
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+engine/data/
+contracts/.testnet-wallet

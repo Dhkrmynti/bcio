@@ -1,0 +1,17 @@
+{
+  "name": "bcio-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "BCIO cross-asset engine: market data + correlation tools, MCP server, and the terminal agent",
+  "scripts": {
+    "start": "node --env-file=.env src/server.js",
+    "mcp": "node src/mcp.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "viem": "^2.57.19",
+    "zod": "^4.6.7"
+  }
+}
