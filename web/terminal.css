@@ -251,3 +251,6 @@ h1, h2 { margin: 0; }
   .right { display: block; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* logo koin */
+.brand .mark { width: 28px; height: 28px; flex: none; }
