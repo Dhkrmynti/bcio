@@ -118,10 +118,14 @@ def mark_obj(name, rings, height, bevel, mat):
     ob.location = (0, 0, Z_FIELD + height / 2 - 0.002)
     return ob
 
+def back(ob):   # salinan di muka belakang (diputar 180° di sumbu Y supaya terbaca benar dari belakang)
+    o2 = link(bpy.data.objects.new(ob.name + "_b", ob.data)); o2.parent = coin
+    o2.location = (0, 0, -ob.location.z); o2.rotation_euler = (0, math.pi, 0)
+
 for i, sh in enumerate(MARK["shapes"]):
-    mark_obj(f"lip{i}", [sh["outer"]] + sh["inner"], H_LIP, 0.010, M_LOGO)
+    back(mark_obj(f"lip{i}", [sh["outer"]] + sh["inner"], H_LIP, 0.010, M_LOGO))
     if sh["inner"]:
-        mark_obj(f"in{i}", sh["inner"], H_IN, 0.004, M_RECESS)
+        back(mark_obj(f"in{i}", sh["inner"], H_IN, 0.004, M_RECESS))
 
 # ---------------------------------------------------------------- pose: berdiri, menghadap kanan-depan
 POSE = arg("--pose", "stand")
@@ -234,7 +238,20 @@ try:
 except Exception as e:
     print("GPU tidak tersedia:", e)
 
-name = {"stand": f"coin-stand-{METAL}", "front": f"coin-front-{METAL}", "banner": f"banner-{METAL}"}[POSE] + ("-alpha" if ALPHA else "")
+if POSE == "spin":
+    # koin berputar satu putaran penuh di sumbu vertikal; frame PNG berlatar transparan (bayangan ikut)
+    #   blender -b -P build_logo_coin_stand.py -- --pose spin --alpha 1 --frames 90 --out <folder>
+    N = arg("--frames", 90); OUT = arg("--out", str(HERE / "spin"))
+    coin.rotation_euler = (math.radians(90), 0, 0); coin.rotation_mode = "XYZ"
+    scene.frame_start, scene.frame_end = 0, N - 1
+    drv = coin.driver_add("rotation_euler", 2).driver   # putaran linear: loop mulus
+    drv.type = "SCRIPTED"; drv.expression = f"frame * 6.283185307 / {N}"
+    cam.dof.use_dof = False
+    scene.render.image_settings.color_mode = "RGBA" if ALPHA else "RGB"
+    scene.render.filepath = OUT.rstrip("/") + "/"
+    bpy.ops.render.render(animation=True)
+    print("SELESAI spin", N); raise SystemExit
+name = {"stand": f"coin-stand-{METAL}", "front": f"coin-front-{METAL}", "banner": f"banner-{METAL}"}.get(POSE, POSE) + ("-alpha" if ALPHA else "")
 bpy.ops.wm.save_as_mainfile(filepath=str(HERE / "logo_coin_stand.blend"))
 scene.render.image_settings.color_mode = "RGBA" if ALPHA else "RGB"
 scene.render.filepath = str(HERE / f"{name}.png")
