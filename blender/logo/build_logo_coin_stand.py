@@ -128,6 +128,22 @@ POSE = arg("--pose", "stand")
 coin.rotation_euler = (math.radians(90 - 4), 0, math.radians(32)) if POSE == "stand" else (math.radians(90 - 3), 0, 0)
 coin.location = (0, 0, R)
 
+BANNER = POSE == "banner"
+if BANNER:
+    # koin utama berdiri seperti pose "stand", ditambah dua koin pendamping (data mesh dibagi)
+    coin.rotation_euler = (math.radians(90 - 4), 0, math.radians(32))
+    def clone(loc, rot):
+        bpy.ops.object.select_all(action="DESELECT")
+        for o in [coin] + list(coin.children_recursive): o.select_set(True)
+        bpy.context.view_layer.objects.active = coin
+        bpy.ops.object.duplicate(linked=True)
+        root = [o for o in bpy.context.selected_objects if o.parent is None][0]
+        root.location = loc; root.rotation_euler = rot
+        return root
+    clone((2.15, -0.9, TH / 2 + 0.002), (0, 0, math.radians(-20)))                           # rebah di lantai
+    clone((2.7, 2.6, R), (math.radians(90 - 6), 0, math.radians(58)))                         # berdiri di belakang
+    clone((4.9, 3.4, R * 0.999), (math.radians(90 - 2), 0, math.radians(-10)))               # jauh kanan belakang, buram
+
 # ---------------------------------------------------------------- studio beige
 BG_TOP, BG_LOW = (164, 152, 134), (205, 194, 176)
 def plane(name, loc, rot, size):
@@ -200,6 +216,10 @@ co.location = (0.25, -9.6, 1.55)
 co.rotation_euler = (Vector((0.05, 0, 1.0)) - co.location).to_track_quat("-Z", "Y").to_euler()
 cam.dof.use_dof = True; cam.dof.focus_object = coin; cam.dof.aperture_fstop = 8
 scene.render.resolution_x = scene.render.resolution_y = RES
+if BANNER:
+    cam.sensor_fit = "VERTICAL"; cam.sensor_height = 36; cam.lens = 118
+    cam.shift_x = -0.24; cam.dof.aperture_fstop = 5.6
+    scene.render.resolution_x, scene.render.resolution_y = RES * 3, RES
 scene.render.engine = "CYCLES"
 scene.cycles.samples = SAMPLES
 scene.cycles.use_denoising = True
@@ -214,7 +234,7 @@ try:
 except Exception as e:
     print("GPU tidak tersedia:", e)
 
-name = (f"coin-stand-{METAL}" if POSE == "stand" else f"coin-front-{METAL}") + ("-alpha" if ALPHA else "")
+name = {"stand": f"coin-stand-{METAL}", "front": f"coin-front-{METAL}", "banner": f"banner-{METAL}"}[POSE] + ("-alpha" if ALPHA else "")
 bpy.ops.wm.save_as_mainfile(filepath=str(HERE / "logo_coin_stand.blend"))
 scene.render.image_settings.color_mode = "RGBA" if ALPHA else "RGB"
 scene.render.filepath = str(HERE / f"{name}.png")
