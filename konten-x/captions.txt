@@ -1,0 +1,253 @@
+BCIO · X captions
+Angka di post after launch dibaca live dari bcio.trade dan mesin korelasi BCIO pada saat gambar dirender.
+Ganti [CA] dengan contract address $BCIO setelah token live (lalu render ulang a01, a20, caoutro dan video CA, lihat _src/README.txt).
+Sengaja tanpa tanda pisah panjang.
+
+
+PRE LAUNCH
+==========
+
+pre/01-wall-street-closes.png
+Wall Street closes at 4.
+
+The market doesn't. Something is reading it all weekend.
+
+pre/02-two-markets-one-read.png
+Two markets. One read.
+
+Stock tokens and crypto, read as one market by an AI agent on Robinhood Chain.
+
+pre/03-does-btc-follow-nvda.png
+Does BTC follow NVDA?
+
+Correlation, and the lag between them, hour by hour. Soon you can just ask.
+
+pre/04-one-basket-one-signature.png
+One basket. One signature.
+
+The agent proposes. Your wallet signs. Nothing moves without you.
+
+pre/05-bcio-soon.png
+$BCIO. Soon.
+
+The AI agent terminal for stocks and crypto, on Robinhood Chain.
+bcio.trade
+
+
+CA POST
+=======
+
+video/bcio-ca.mp4
+$BCIO is live on Robinhood Chain.
+
+BCIO reads stock tokens and crypto as one market: correlations, the lag between them, and what moves while Wall Street sleeps. Ask it, get a basket, sign it yourself.
+
+Here it is, running.
+
+CA: [CA]
+bcio.trade
+
+
+AFTER LAUNCH · gambar
+=====================
+
+post/01-bcio-is-live.png
+$BCIO is live.
+
+The AI agent terminal for stocks and crypto is open.
+
+CA: [CA]
+bcio.trade
+
+post/02-the-board.png
+The board right now.
+
+NVDA, TSLA and QQQ as stock tokens next to BTC, ETH, SOL and the AI coins. Nine assets, one screen, 24/7.
+
+bcio.trade/terminal.html
+
+post/03-btc-vs-nvda-lag.png
+Does BTC follow NVDA?
+
+Over the last 14 days: correlation 0.41, and no lag. They move in the same hour. Neither one leads.
+
+Ask the terminal any pair.
+
+post/04-tsla-and-sol.png
+TSLA and SOL.
+
+Correlation 0.38 over 14 days, same hour. Related, far from locked.
+
+Past data, not a forecast.
+
+post/05-correlation-matrix.png
+The whole market, one grid.
+
+Stocks move with stocks. Crypto moves with crypto. The squares in between are where it gets interesting.
+
+post/06-wall-street-closed.png
+Wall Street is closed.
+
+Stock tokens still trade on chain, 24/7. BCIO reads them next to crypto all weekend.
+
+post/07-weekend-shield.png
+Weekend Shield.
+
+Crypto dumps on a Saturday, Wall Street can't react. Your stock tokens can.
+
+Set a rule once: if BTC, ETH or SOL move past your threshold while Wall Street is closed, the agent hedges part of your stock tokens to USDC. Inside limits you sign on chain.
+
+post/08-baskets.png
+Ask for a basket.
+
+"Split 1,000 USDC: 50% TSLA, 50% SOL."
+
+The agent builds it. You review it. Your wallet signs it.
+
+post/09-rebalancer.png
+Set the weights. It keeps them.
+
+When a position drifts past the band, the agent trades it back. Only between your own tokens, only inside your limits.
+
+post/10-your-limits-on-chain.png
+Your limits. On chain.
+
+Max per trade. Max per day. Expiry. Revoke in one click.
+
+The contract enforces them, not a promise.
+
+post/11-the-terminal.png
+Ask the market.
+
+Prices, correlations, the lag, the weekend check, baskets and rules. One terminal, one chat.
+
+bcio.trade/terminal.html
+
+post/12-bcio-in-claude.png
+BCIO inside Claude.
+
+claude mcp add bcio -- npx -y bcio-agent mcp
+
+Then ask Claude: "Which stock tokens are exposed to the crypto move this weekend?"
+
+post/13-cli.png
+npx bcio-agent
+
+Nine assets, 24h and 7d, Wall Street status and the shield check. In one command.
+
+post/14-ai-coins-vs-nvda.png
+Which AI coin moves most with NVDA?
+
+TAO, then RENDER, then FET. Same hour correlation of hourly returns with Nvidia's stock token.
+
+post/15-two-markets.png
+Inside crypto: 0.82. Inside stock tokens: 0.62. Across the two: 0.40.
+
+Two markets that touch, but don't copy each other. That link is what BCIO reads.
+
+post/16-data-not-advice.png
+Data, not advice.
+
+Correlations describe the past. Stock tokens are not shares. Testnet tokens are for testing. You decide, you sign.
+
+post/17-the-desk-on-chain.png
+The desk is on Robinhood Chain.
+
+Test tokens priced at real market prices, a faucet, and the agent permission contract. Try every flow before real money.
+
+post/18-how-it-reads.png
+How BCIO reads the market:
+
+1. Prices for stock tokens and crypto, every hour
+2. Lined up by the hour, turned into returns
+3. Correlation, then a scan for the lag
+4. Signal into a basket or a rule, signed by you
+
+post/19-built-for-the-weekend.png
+The floor is empty.
+
+Crypto still moves. Stock tokens still trade. BCIO is still reading.
+
+post/20-links.png
+Everything BCIO.
+
+Site: bcio.trade
+Terminal: bcio.trade/terminal.html
+CLI and MCP: npx bcio-agent
+GitHub: github.com/bcioagents/bcio-agent
+CA: [CA]
+
+
+AFTER LAUNCH · video
+====================
+
+video/bcio-lore.mp4
+Wall Street closes at four. Crypto never does.
+
+BCIO reads both as one market.
+
+video/bcio-coin.mp4
+$BCIO.
+
+The AI agent terminal for stocks and crypto.
+bcio.trade
+
+video/bcio-board.mp4
+Nine assets. One board. Live.
+
+Stock tokens next to crypto, and they never close.
+
+video/bcio-lag.mp4
+Does BTC follow NVDA? We asked.
+
+Correlation 0.41, same hour. No lag.
+
+Ask any pair: bcio.trade/terminal.html
+
+video/bcio-matrix.mp4
+Nine assets. 36 pairs. One grid.
+
+Darker gold means they move together.
+
+video/bcio-shield.mp4
+Wall Street is closed. Crypto isn't.
+
+Weekend Shield hedges your stock tokens when crypto moves hard, inside limits you set on chain.
+
+video/bcio-basket.mp4
+Ask. Review. Sign.
+
+One basket, one signature.
+
+video/bcio-rebalance.mp4
+Set the weights once. The agent keeps them, inside your limits.
+
+video/bcio-mcp.mp4
+One line and BCIO is inside Claude.
+
+claude mcp add bcio -- npx -y bcio-agent mcp
+
+video/bcio-weekend.mp4
+Saturday. The floor is empty. BCIO is still reading.
+
+
+MILESTONE
+=========
+
+video/bcio-dex.mp4  (saat market cap $20K dan DEX dibayar)
+$20K market cap. DEX paid.
+
+Thank you for being early. BCIO is on the chart now.
+
+CA: [CA]
+
+
+BURN
+====
+
+video/bcio-burn.mp4  (setelah seluruh supply dev di-burn)
+100% of the $BCIO dev supply is burned.
+
+Sent to the dead address. The dev wallet holds zero. What's left is the terminal.
+
+Burn tx: [link tx burn]

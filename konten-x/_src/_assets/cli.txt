@@ -1,0 +1,17 @@
+
+  ✺ BCIO · stocks + crypto · Sun 14:35 ET · Wall Street closed
+  ──────────────────────────────────────────────────────────────────
+                  price        24h         7d   7 days
+  NVDA          $163.97     +2.56%    -14.40%   █▇▆▆▆▆▆▃▅▆▅▂▂▁▃▃▄▂▂▂▂▂▂▂  stock token
+  TSLA          $388.27     +0.83%     +8.16%   ▁▁▁▅▅▄▄▄▅▆▇▆▆▆███▆▆▆▆▅▆▆  stock token
+  QQQ           $674.45     +0.47%     +2.37%   ▁▁▁▅▅▅▅▄▆▇█▆▆▆▇▇▇▅▄▅▄▄▄▄  stock token
+  BTC           $64,941     -0.88%    -14.55%   ██▇██▇▇▆▇▇▇▇▇▆▅▄▄▄▃▃▂▁▁▂  crypto
+  ETH         $1,824.91     -0.11%    -18.60%   █▇▆▇▆▆▆▅▅▅▆▅▅▅▅▃▄▄▃▃▂▁▂▂  crypto
+  SOL             $71.7     -0.38%    -20.27%   █▇▇▇▇▇▆▆▆▆▆▆▆▅▅▄▅▅▄▃▂▁▁▂  crypto
+  RENDER          $1.38     -2.55%    -10.61%   ▆▇▇█▇▇▇▇███▆▆▄▅▄▅▅▆▅▄▁▂▂  crypto
+  TAO           $191.45     -0.84%    -14.58%   █▇▇███▇▇▇▇█▇▆▅▆▄▆▆▇▅▄▁▂▃  crypto
+  FET          $0.13234     +0.87%     -7.11%   ▆▅▅▇▆▆▆▆▆▆█▇▇▆▇▅▇▆▇▅▄▁▂▃  crypto
+
+  ● Wall Street is closed; crypto moved less than 5% in 24h. Quiet.
+  bcio corr NVDA BTC · bcio matrix · bcio shield · bcio wallet 0x… · bcio mcp
+

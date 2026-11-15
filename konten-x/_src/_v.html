@@ -1,0 +1,226 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#ececf2;--ink:#23260f;--dim:#5d5f4c;--faint:#8b8b7c;--gold:#8a6420;--gold2:#c9a46a;--goldfill:#e2c58e;--up:#2e7d43;--down:#c0442f;--cream:#f4efe6;
+  --disp:"Archivo",sans-serif;--sans:"Inter Tight",sans-serif;--mono:"JetBrains Mono",monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#15130e}
+#s{position:relative;width:1920px;height:1080px;overflow:hidden;font-family:var(--sans);color:var(--cream);background:#15130e}
+#s.light{background:var(--bg);color:var(--ink)}
+.L{position:absolute;inset:0}
+.img{position:absolute;inset:0;background-size:cover;background-position:center;will-change:transform,opacity}
+.shL{background:linear-gradient(90deg,rgba(20,16,10,.88),rgba(20,16,10,.45) 55%,rgba(20,16,10,.05))}
+.shB{background:linear-gradient(0deg,rgba(20,16,10,.92),rgba(20,16,10,.2) 55%,rgba(20,16,10,.35))}
+.shD{background:rgba(20,16,10,.72)}
+.grain{opacity:.06;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.vig{background:radial-gradient(90% 80% at 50% 50%,transparent 55%,rgba(10,8,5,.5))}
+.light .vig{background:radial-gradient(90% 80% at 50% 50%,transparent 60%,rgba(35,38,15,.12))}
+.t{position:absolute;opacity:0}
+.c{left:0;right:0;text-align:center}
+h1{font-family:var(--disp);font-weight:900;font-stretch:112%;text-transform:uppercase;letter-spacing:-.01em;line-height:.9}
+.h-xl{font-size:210px}.h-l{font-size:140px}.h-m{font-size:100px}.h-s{font-size:72px}
+.sub{font:500 36px/1.42 var(--sans);color:rgba(244,239,230,.82)}
+.light .sub{color:var(--dim)}
+.k{font:700 21px var(--sans);letter-spacing:.26em;text-transform:uppercase;color:var(--goldfill)}
+.light .k{color:var(--gold)}
+.brand{display:flex;align-items:center;gap:16px;font:800 32px var(--sans);letter-spacing:.06em}
+.brand img{width:56px;height:56px}
+.mono{font-family:var(--mono)}
+.up{color:var(--up)}.down{color:var(--down)}
+.card{position:absolute;background:linear-gradient(160deg,rgba(255,255,255,.8),rgba(255,255,255,.48));box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 22px 46px -28px rgba(35,38,15,.5);border-radius:26px;color:var(--ink)}
+.q{padding:26px 30px;display:grid;grid-template-columns:1fr auto;row-gap:8px;opacity:0}
+.q b{font:800 30px var(--sans);letter-spacing:.04em}.q i{font:600 15px var(--mono);font-style:normal;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;align-self:center}
+.q .px{font:500 38px var(--mono)}.q .ch{font:600 24px var(--mono);text-align:right;align-self:end}
+.bars{display:flex;align-items:flex-end;gap:9px;height:420px}
+.bars span{flex:1;border-radius:7px 7px 0 0;background:#d8cdb9;transform-origin:bottom}
+.bars span.best{background:linear-gradient(180deg,#c9a46a,#8a6420)}
+.bars span.neg{background:#e9c6bf}
+.mx{display:grid;grid-template-columns:130px repeat(9,104px);gap:6px;font:600 18px var(--mono)}
+.mx div{height:70px;display:flex;align-items:center;justify-content:center;border-radius:10px}
+.mx .lb{justify-content:flex-end;padding-right:12px;color:var(--dim);background:none}
+.mx .tp{color:var(--dim);background:none;height:36px}
+.code{font:500 34px/1.7 var(--mono);white-space:pre;color:var(--cream)}
+.code .c{color:#8f8a7a}.code .g{color:var(--goldfill)}
+.term{position:absolute;border-radius:24px;background:#221f17;box-shadow:inset 0 0 0 1px rgba(244,239,230,.1),0 30px 60px -30px rgba(0,0,0,.6);padding:44px 54px}
+.bub{position:absolute;padding:24px 32px;border-radius:26px 26px 6px 26px;background:var(--ink);color:var(--cream);font:500 32px/1.4 var(--sans)}
+.pill{display:inline-block;padding:20px 36px;border-radius:999px;background:var(--ink);color:var(--cream);font:700 24px var(--sans);letter-spacing:.06em;text-transform:uppercase}
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:18px 0;border-top:1px solid rgba(35,38,15,.12);font:500 30px var(--sans)}
+.row:first-child{border-top:0}.row b{font:600 30px var(--mono)}
+.ember{position:absolute;border-radius:50%;background:#ffb35a;box-shadow:0 0 12px 3px rgba(255,170,80,.6)}
+.chip{display:inline-block;padding:16px 24px;border:1px solid rgba(244,239,230,.25);border-radius:14px;font:600 30px var(--mono);margin-right:16px}
+#spin{position:absolute}
+</style></head><body><div id="s"></div>
+<script>
+const D = window.DATA || {}, S = new URLSearchParams(location.search).get("s"), root = document.getElementById("s");
+const A = (f) => `_assets/${f}`, H = (f) => `_hf/${f}`;
+const has = (f) => (D.hf || []).includes(f), pic = (f) => (has(f) ? H(f) : A("coin-stand.jpg"));
+const esc = (s) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const TK = D.token?.ticker || "$BCIO", CA = D.token?.ca, SITE = D.site || "bcio.trade";
+const AS = D.watch?.assets || [], BY = Object.fromEntries(AS.map((a) => [a.symbol, a])), MK = D.watch?.market || {};
+const fmtP = (v) => v >= 1000 ? v.toLocaleString("en-US", { maximumFractionDigits: 0 }) : v >= 1 ? v.toFixed(2) : v.toFixed(4);
+const pct = (v) => (v >= 0 ? "+" : "") + v.toFixed(2) + "%", cls = (v) => (v >= 0 ? "up" : "down");
+const anims = [];
+const add = (html, parent = root) => { const w = document.createElement("div"); w.innerHTML = html.trim(); const el = w.firstElementChild; parent.appendChild(el); return el; };
+function show(el, a, b, { rise = 24, dur = 0.9 } = {}) {
+  anims.push(el.animate([{ opacity: 0, transform: `translateY(${rise}px)` }, { opacity: 1, transform: "translateY(0)" }], { delay: a * 1000, duration: dur * 1000, fill: "both", easing: "cubic-bezier(.2,.8,.2,1)" }));
+  if (b != null) anims.push(el.animate([{ opacity: 1 }, { opacity: 0 }], { delay: b * 1000, duration: 600, fill: "forwards", easing: "ease-in" }));
+  return el;
+}
+function photo(src, a, b, { from = 1.0, to = 1.12, x = 0, y = 0 } = {}) {
+  const el = add(`<div class="img" style="background-image:url(${src});opacity:0"></div>`);
+  const d = (b ?? DUR) - a + 1.2;
+  anims.push(el.animate([{ transform: `scale(${from}) translate(0,0)` }, { transform: `scale(${to}) translate(${x}px,${y}px)` }], { delay: a * 1000, duration: d * 1000, fill: "both", easing: "linear" }));
+  anims.push(el.animate([{ opacity: 0 }, { opacity: 1 }], { delay: a * 1000, duration: a ? 1100 : 1, fill: "both" }));
+  if (b != null) anims.push(el.animate([{ opacity: 1 }, { opacity: 0 }], { delay: b * 1000, duration: 1100, fill: "forwards" }));
+  return el;
+}
+const layer = (cls) => add(`<div class="L ${cls}"></div>`);
+const brand = (a = 0.2, b) => show(add(`<div class="t brand" style="left:90px;top:74px"><img src="${A("logo.png")}">BCIO</div>`), a, b);
+const finish = () => { layer("vig"); layer("grain"); };
+const count = (el, to, a, d, fmt) => anims.push({ seek: (t) => { const k = Math.min(1, Math.max(0, (t - a) / d)), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(to * e); } });
+function typeText(el, text, a, cps = 30) { anims.push({ seek: (t) => { const n = Math.max(0, Math.min(text.length, Math.floor((t - a) * cps))); el.textContent = text.slice(0, n); } }); return a + text.length / cps; }
+const grow = (el, a, d = 0.8) => anims.push(el.animate([{ transform: "scaleY(0)" }, { transform: "scaleY(1)" }], { delay: a * 1000, duration: d * 1000, fill: "both", easing: "cubic-bezier(.2,.8,.2,1)" }));
+const widen = (el, a, d = 1.0) => anims.push(el.animate([{ width: "0%" }, { width: el.dataset.w }], { delay: a * 1000, duration: d * 1000, fill: "both", easing: "cubic-bezier(.2,.8,.2,1)" }));
+const fadeBg = (color, a, d = 0.9) => { const bg = add(`<div class="L" style="background:${color};opacity:0"></div>`); anims.push(bg.animate([{ opacity: 0 }, { opacity: 1 }], { delay: a * 1000, duration: d * 1000, fill: "both" })); };
+// koin berputar dari frame Blender (_assets/spin/000.webp …), cadangan: foto koin diam
+function spin(a, { x = 1060, y = 140, size = 800, fps = 30 } = {}) {
+  if (D.coin) { const im = add(`<img id="spin" src="${A("spin/000.webp")}" style="left:${x}px;top:${y}px;width:${size}px;height:${size}px;opacity:0">`); show(im, a, null, { rise: 0, dur: 0.8 });
+    let last = -1; anims.push({ seek: (t) => { const i = Math.floor(Math.max(0, t - a) * fps) % D.coin; if (i !== last) { last = i; im.src = A(`spin/${String(i).padStart(3, "0")}.webp`); } } }); return im; }
+  return show(add(`<img src="${A("logo.png")}" style="position:absolute;left:${x + size * .12}px;top:${y + size * .12}px;width:${size * .76}px;opacity:0">`), a, null, { rise: 0 });
+}
+const endCard = (a, line = "Stocks and crypto, read together.") => {
+  fadeBg("#15130e", a);
+  show(add(`<img class="t" src="${A("logo.png")}" style="left:870px;top:250px;width:180px">`), a + 0.3, null, { rise: 0 });
+  show(add(`<div class="t c" style="top:470px;color:var(--cream)"><h1 class="h-m">BCIO</h1></div>`), a + 0.5);
+  show(add(`<div class="t c" style="top:600px"><p class="sub" style="color:rgba(244,239,230,.82)">${line}</p></div>`), a + 0.9);
+  show(add(`<div class="t c" style="top:720px"><p class="k" style="letter-spacing:.24em;color:var(--goldfill)">${SITE.toUpperCase()} · ${TK}</p></div>`), a + 1.3);
+};
+const lightEnd = (a, line) => endCard(a, line);
+const pairOf = (k) => D.pairs?.[k]?.result;
+const heat = (v) => { const k = Math.max(0, Math.min(1, v)); return `background:rgba(${214 - 100 * k},${178 - 92 * k},${112 - 80 * k},${.18 + .82 * k});color:${k > .62 ? "#f4efe6" : "#23260f"}`; };
+const embers = (n = 46) => { for (let i = 0; i < n; i++) { const s = 3 + (i * 37 % 7), x = 700 + (i * 173 % 1100), y = 560 + (i * 97 % 400); const e = add(`<div class="ember" style="width:${s}px;height:${s}px;left:${x}px;top:${y}px;opacity:0"></div>`);
+  anims.push(e.animate([{ opacity: 0, transform: "translate(0,0)" }, { opacity: .9, offset: .2 }, { opacity: 0, transform: `translate(${(i % 5) * 40 - 60}px,${-320 - (i * 31 % 300)}px)` }], { delay: (i * 0.23 % 8) * 1000, duration: 4200, iterations: 3, fill: "both" })); } };
+const SC = {
+  // ---------- CA post: intro + rekaman + outro
+  caintro() { DUR = 6; photo(A("coin-stand.jpg"), 0, null, { from: 1.08, to: 1.0 }); layer("shL"); brand(0.2);
+    show(add(`<div class="t" style="left:96px;top:380px"><p class="k">Robinhood Chain</p></div>`), 0.5);
+    show(add(`<div class="t" style="left:90px;top:440px"><h1 class="h-l">${TK}<br>is live.</h1></div>`), 0.9);
+    show(add(`<div class="t" style="left:96px;top:790px;width:900px"><p class="sub">The AI agent terminal for stocks and crypto. Here it is, running.</p></div>`), 1.8); finish(); },
+  caoutro() { DUR = 7; photo(A("coin-stand.jpg"), 0, null, { from: 1.0, to: 1.06 }); layer("shL");
+    show(add(`<div class="t" style="left:96px;top:300px"><h1 class="h-l">BCIO</h1></div>`), 0.3);
+    show(add(`<div class="t" style="left:96px;top:470px"><p class="sub mono" style="color:var(--cream);font-family:var(--mono)">${SITE}</p></div>`), 0.8);
+    show(add(`<div class="t" style="left:96px;top:550px;width:900px"><p class="sub">Stocks and crypto, read together. You sign every trade.</p></div>`), 1.3);
+    show(add(`<div class="t" style="left:96px;top:720px"><p class="k" style="font-family:var(--mono);letter-spacing:.06em;font-size:26px">${CA ? "CA " + esc(CA) : TK}</p></div>`), 1.8); finish(); },
+  // ---------- milestone
+  paydex() { DUR = 14; photo(pic("hf08-dawn.jpg"), 0, null, { from: 1.0, to: 1.18, y: -20 }); layer("shB"); brand();
+    const n = show(add(`<div class="t c" style="top:300px"><h1 class="mono" style="font-family:var(--mono);font-weight:600;font-size:230px;letter-spacing:-.04em">$0K</h1></div>`), 0.6, 6.4);
+    count(n.querySelector("h1"), 20, 0.8, 2.8, (v) => "$" + Math.round(v) + "K");
+    show(add(`<div class="t c" style="top:590px"><p class="k" style="font-size:26px">${TK} market cap</p></div>`), 2.6, 6.4);
+    show(add(`<div class="t c" style="top:360px"><h1 class="h-l">DEX paid.</h1></div>`), 7.0);
+    show(add(`<div class="t c" style="top:560px"><p class="sub">Thank you. BCIO is on the chart now.</p></div>`), 7.8);
+    endCard(11.0); finish(); },
+  burn() { DUR = 15; photo(pic("hf07-fire.jpg"), 0, null, { from: 1.05, to: 1.2, x: 30 }); layer("shL"); embers(); brand();
+    show(add(`<div class="t" style="left:96px;top:250px"><p class="k">${TK} dev supply</p></div>`), 0.8);
+    show(add(`<div class="t" style="left:88px;top:300px"><h1 class="h-xl">100%<br>burned.</h1></div>`), 1.6);
+    if (D.token?.burned) show(add(`<div class="t" style="left:96px;top:720px"><p class="sub mono" style="font-family:var(--mono);color:var(--cream)">${Number(D.token.burned).toLocaleString("en-US")} ${TK}</p></div>`), 2.6);
+    show(add(`<div class="t" style="left:96px;top:800px;width:1000px"><p class="sub">Sent to the dead address. The dev wallet holds zero. What's left is the terminal.</p></div>`), 3.4);
+    endCard(11.4, "The proof is on chain. Link in the post."); finish(); },
+  // ---------- after launch
+  lore() { DUR = 34;
+    photo(pic("hf01-closed.jpg"), 0, 5.6, { to: 1.1 }); photo(pic("hf02-twin.jpg"), 5.2, 11.0, { to: 1.12 }); photo(pic("hf05-bridge.jpg"), 10.6, 16.4, { to: 1.1, x: -40 });
+    photo(pic("hf03-desk.jpg"), 16.0, 21.8, { to: 1.12 }); photo(pic("hf10-seal.jpg"), 21.4, 27.2, { to: 1.12 }); photo(A("coin-stand.jpg"), 26.8, null, { from: 1.1, to: 1.0 });
+    layer("shL"); brand();
+    const line = (txt, a, b) => show(add(`<div class="t" style="left:96px;bottom:210px"><h1 class="h-m">${txt}</h1></div>`), a, b);
+    line("Wall Street<br>closes at four.", 0.8, 4.8); line("Crypto<br>never does.", 5.9, 10.2); line("Two markets.<br>One read.", 11.3, 15.6);
+    line("Ask. It finds<br>the lag.", 16.7, 21.0); line("One basket.<br>One signature.", 22.2, 26.4); line(`${TK}`, 27.6, 30.2);
+    endCard(30.4); finish(); },
+  board() { DUR = 16; root.classList.add("light"); brand(0.2, 12.4);
+    show(add(`<div class="t" style="left:96px;top:170px"><h1 class="h-s">Nine assets. One board.</h1></div>`), 0.4, 12.4);
+    show(add(`<div class="t" style="right:96px;top:94px"><p class="k" style="font-family:var(--mono);letter-spacing:.12em">${esc(MK.nyTime || "")} · Wall Street ${MK.wallStreetOpen ? "open" : "closed"}</p></div>`), 0.6, 12.4);
+    AS.forEach((a, i) => { const x = 96 + (i % 3) * 586, y = 300 + Math.floor(i / 3) * 220;
+      const el = add(`<div class="card q" style="left:${x}px;top:${y}px;width:556px"><b>${a.symbol}</b><i>${a.kind === "stock" ? "Stock token" : "Crypto"}</i><span class="px">0</span><span class="ch ${cls(a.change24h)}">${pct(a.change24h)}</span></div>`);
+      show(el, 1.0 + i * 0.22, 12.4, { rise: 20, dur: 0.6 }); count(el.querySelector(".px"), a.price, 1.2 + i * 0.22, 2.0, fmtP); });
+    show(add(`<div class="t" style="left:96px;top:980px"><p class="k" style="font-family:var(--mono);letter-spacing:.08em;font-size:19px">Live from ${SITE} · CoinGecko · 24h change · stock tokens trade 24/7</p></div>`), 3.4, 12.4);
+    lightEnd(12.8); finish(); },
+  lag() { const r = pairOf("NVDA-BTC"); DUR = 18; root.classList.add("light"); brand(0.2, 14.4);
+    show(add(`<div class="t" style="left:96px;top:220px;width:620px"><h1 class="h-m">Does BTC<br>follow<br>NVDA?</h1></div>`), 0.4, 14.4);
+    const box = show(add(`<div class="card t" style="left:800px;top:170px;width:1024px;padding:44px 50px 34px"><div style="display:flex;justify-content:space-between;font:600 20px var(--mono);color:var(--dim)"><span>NVDA ↔ BTC · ${r.window_days}d hourly</span><span>lag −12h … +12h</span></div><div class="bars" style="margin-top:28px"></div><div style="display:flex;justify-content:space-between;margin-top:14px;font:500 18px var(--mono);color:var(--faint)"><span>−12h</span><span>0</span><span>+12h</span></div></div>`), 1.0, 14.4, { rise: 30 });
+    const mx = Math.max(...r.lag_curve.map((c) => Math.abs(c.corr))), bars = box.querySelector(".bars");
+    r.lag_curve.forEach((c, i) => { const s = add(`<span class="${c.lag === r.best_lag_hours ? "best" : c.corr < 0 ? "neg" : ""}" style="height:${Math.max(2, Math.abs(c.corr) / mx * 100)}%"></span>`, bars); grow(s, 1.8 + i * 0.07, 0.6); });
+    const ans = show(add(`<div class="t" style="left:96px;top:640px;width:640px"><p class="sub" style="color:var(--ink)"></p></div>`), 4.4, 14.4);
+    typeText(ans.querySelector("p"), r.best_lag_hours === 0 ? `Not with a lag. Correlation ${r.corr_lag0.toFixed(2)}, and they move in the same hour.` : `Best line up at ${r.best_lag_hours}h. Correlation ${r.corr_best_lag.toFixed(2)}.`, 4.6, 34);
+    show(add(`<div class="t" style="left:96px;top:880px"><p class="k" style="font-family:var(--mono);letter-spacing:.08em;font-size:19px">${r.aligned_hours} hours aligned · past data, not a forecast</p></div>`), 7.6, 14.4);
+    lightEnd(14.8, "Ask the market. It finds the lag."); finish(); },
+  matrix() { const S2 = D.matrix.symbols, M = D.matrix.matrix; DUR = 16; root.classList.add("light"); brand(0.2, 12.4);
+    show(add(`<div class="t" style="left:96px;top:220px;width:520px"><h1 class="h-s">The whole<br>market,<br>one grid.</h1></div>`), 0.4, 12.4);
+    show(add(`<div class="t" style="left:96px;top:560px;width:500px"><p class="sub">Darker gold: two assets move together. Stocks on top, crypto below.</p></div>`), 1.2, 12.4);
+    const box = show(add(`<div class="card t" style="left:690px;top:120px;padding:30px"><div class="mx"></div></div>`), 0.8, 12.4, { rise: 30 }), g = box.querySelector(".mx");
+    add(`<div class="tp"></div>`, g); S2.forEach((s) => add(`<div class="tp">${s.slice(0, 4)}</div>`, g));
+    S2.forEach((s, i) => { add(`<div class="lb">${s}</div>`, g); M[i].forEach((v, j) => { const c = add(`<div style="${i === j ? "background:rgba(35,38,15,.08)" : heat(v)}">${i === j ? "" : v.toFixed(2).replace("0.", ".")}</div>`, g); if (i !== j) show(c, 1.6 + (i + j) * 0.12, null, { rise: 0, dur: 0.5 }); }); });
+    lightEnd(12.8, "Hourly returns, seven days, nine assets."); finish(); },
+  shield() { DUR = 20; photo(pic("hf01-closed.jpg"), 0, 7.4, { to: 1.1 }); layer("shL"); brand(0.2);
+    show(add(`<div class="t" style="left:96px;top:300px"><p class="k">${esc(MK.nyTime || "Saturday")}</p></div>`), 0.6, 7.0);
+    show(add(`<div class="t" style="left:90px;top:350px"><h1 class="h-m">Wall Street<br>is closed.</h1></div>`), 1.0, 7.0);
+    show(add(`<div class="t" style="left:96px;top:640px;width:900px"><p class="sub">Your stock tokens are still on chain. Crypto is still moving.</p></div>`), 2.2, 7.0);
+    photo(pic("hf06-shield.jpg"), 7.0, null, { to: 1.12 }); const sh = layer("shL"); anims.push(sh.animate([{ opacity: 0 }, { opacity: 1 }], { delay: 7000, duration: 1000, fill: "both" }));
+    show(add(`<div class="t" style="left:96px;top:220px"><p class="k">Weekend Shield · a rule you sign</p></div>`), 7.8, 16.6);
+    show(add(`<div class="t" style="left:90px;top:270px;width:1100px"><h1 class="h-s">If BTC, ETH or SOL move past 5% while Wall Street is closed</h1></div>`), 8.4, 16.6);
+    show(add(`<div class="t" style="left:96px;top:540px"><p class="sub" style="color:var(--goldfill);font-size:42px">→ sell 50% of each stock token to USDC</p></div>`), 10.0, 16.6);
+    const cr = ["BTC", "ETH", "SOL"].map((s) => BY[s]).filter(Boolean);
+    show(add(`<div class="t" style="left:96px;top:680px">${cr.map((a) => `<span class="chip">${a.symbol} <span style="color:${a.change24h >= 0 ? "#8fd6a1" : "#ff9b85"}">${pct(a.change24h)}</span></span>`).join("")}</div>`), 11.4, 16.6);
+    show(add(`<div class="t" style="left:96px;top:800px;width:1100px"><p class="sub" style="font-size:30px">24h now. The agent checks every minute, inside the limits you set on chain. Revoke anytime.</p></div>`), 12.6, 16.6);
+    endCard(17.0, "Built for the weekend."); finish(); },
+  basket() { DUR = 18; root.classList.add("light"); brand(0.2, 14.4);
+    show(add(`<div class="t" style="left:96px;top:210px;width:640px"><h1 class="h-m">Ask for<br>a basket.</h1></div>`), 0.3, 14.4);
+    const b = show(add(`<div class="bub t" style="right:120px;top:200px;width:880px"></div>`), 0.9, 14.4, { rise: 16 });
+    typeText(b, "Split 1,000 USDC from Solana: 50% TSLA, 50% SOL.", 1.2, 26);
+    const c = show(add(`<div class="card t" style="right:120px;top:400px;width:880px;padding:40px 46px"><p class="k">Basket · you sign</p><div style="margin-top:18px"><div class="row"><span>TSLA</span><b>50% · 500 USDC</b></div><div class="row"><span>SOL</span><b>50% · 500 USDC</b></div></div><div style="margin-top:30px"><span class="pill" id="ap">Approve basket</span></div></div>`), 4.2, 14.4, { rise: 30 });
+    const ap = c.querySelector("#ap"); anims.push(ap.animate([{ transform: "scale(1)" }, { transform: "scale(.94)" }, { transform: "scale(1)" }], { delay: 7600, duration: 500, fill: "both" }));
+    anims.push(ap.animate([{ background: "#23260f" }, { background: "#2e7d43" }], { delay: 7900, duration: 400, fill: "forwards" }));
+    anims.push({ seek: (t) => { ap.textContent = t > 8.0 ? "Signed in your wallet ✓" : "Approve basket"; } });
+    show(add(`<div class="t" style="left:96px;top:640px;width:640px"><p class="sub">The agent builds it. You review it. Your wallet signs it.</p></div>`), 8.6, 14.4);
+    lightEnd(14.8, "One basket. One signature."); finish(); },
+  rebalance() { DUR = 18; root.classList.add("light"); brand(0.2, 14.4);
+    show(add(`<div class="t" style="left:96px;top:220px;width:700px"><h1 class="h-m">Set the<br>weights.</h1></div>`), 0.3, 14.4);
+    const W = [["USDC", 40, 33], ["NVDA", 20, 27], ["QQQ", 15, 16], ["BTC", 15, 13], ["ETH", 10, 11]];
+    const c = show(add(`<div class="card t" style="left:880px;top:220px;width:940px;padding:44px 50px"></div>`), 0.8, 14.4, { rise: 30 });
+    W.forEach(([s, w, drift], i) => { const r = add(`<div style="display:grid;grid-template-columns:120px 1fr 90px;align-items:center;gap:24px;padding:16px 0"><b style="font:700 30px var(--sans)">${s}</b><div style="height:28px;border-radius:14px;background:rgba(35,38,15,.08)"><div class="f" style="height:100%;border-radius:14px;background:linear-gradient(90deg,#e2c58e,#8a6420);width:${w * 2}%"></div></div><span class="mono w" style="font:600 28px var(--mono);text-align:right">${w}%</span></div>`, c);
+      const f = r.querySelector(".f"), lab = r.querySelector(".w");
+      anims.push(f.animate([{ width: `${w * 2}%` }, { width: `${drift * 2}%`, offset: .35 }, { width: `${drift * 2}%`, offset: .6 }, { width: `${w * 2}%` }], { delay: 3000, duration: 6000, fill: "both", easing: "ease-in-out" }));
+      anims.push({ seek: (t) => { const k = (t - 3) / 6; const v = k < 0 ? w : k < .35 ? w + (drift - w) * k / .35 : k < .6 ? drift : k < 1 ? drift + (w - drift) * (k - .6) / .4 : w; lab.textContent = Math.round(v) + "%"; lab.style.color = Math.abs(v - w) > 5 ? "#c0442f" : ""; } }); });
+    show(add(`<div class="t" style="left:96px;top:560px;width:700px"><p class="sub" id="rb">NVDA drifts past the band.</p></div>`), 4.6, 6.8);
+    show(add(`<div class="t" style="left:96px;top:560px;width:700px"><p class="sub">The agent trades it back. Only between your own tokens, inside your limits.</p></div>`), 7.4, 14.4);
+    lightEnd(14.8, "Set the weights. It keeps them."); finish(); },
+  mcp() { DUR = 18; brand(0.2, 14.4);
+    show(add(`<div class="t" style="left:96px;top:180px"><h1 class="h-m">BCIO inside Claude.</h1></div>`), 0.3, 14.4);
+    const t = show(add(`<div class="term t" style="left:96px;right:96px;top:380px;height:520px"><div class="code"><span class="c">$ </span><span id="cmd" class="g"></span>\n<span id="out" class="c"></span></div></div>`), 0.8, 14.4, { rise: 30 });
+    typeText(t.querySelector("#cmd"), "claude mcp add bcio -- npx -y bcio-agent mcp", 1.4, 22);
+    typeText(t.querySelector("#out"), "Added stdio MCP server bcio\n\ntools  get_quotes · market_status · correlate\n       correlation_matrix · weekend_shield · get_wallet", 4.0, 60);
+    show(add(`<div class="t" style="left:96px;top:950px"><p class="k" style="font-family:var(--mono);letter-spacing:.08em;font-size:20px">Read only · no keys · npmjs.com/package/bcio-agent</p></div>`), 7.0, 14.4);
+    endCard(14.8, "Then just ask Claude about the market."); finish(); },
+  weekend() { DUR = 14; photo(pic("hf04-sunday.jpg"), 0, null, { to: 1.12, x: -30 }); layer("shL"); brand();
+    show(add(`<div class="t" style="left:96px;top:330px"><p class="k">Saturday · Sunday</p></div>`), 0.6, 10.2);
+    show(add(`<div class="t" style="left:90px;top:380px"><h1 class="h-l">The floor<br>is empty.</h1></div>`), 1.0, 10.2);
+    show(add(`<div class="t" style="left:96px;top:720px;width:1000px"><p class="sub">Crypto still moves. Stock tokens still trade. BCIO is still reading.</p></div>`), 2.4, 10.2);
+    endCard(10.6); finish(); },
+  coin() { DUR = 12; root.classList.add("light"); root.style.background = "linear-gradient(180deg,#b9ae9c,#d8cfc0)"; brand(0.2, 8.6);
+    spin(0.2, { x: 960, y: 140, size: 820 });
+    show(add(`<div class="t" style="left:96px;top:360px"><p class="k">Robinhood Chain</p></div>`), 0.8, 8.6);
+    show(add(`<div class="t" style="left:90px;top:410px"><h1 class="h-xl">${TK}</h1></div>`), 1.2, 8.6);
+    show(add(`<div class="t" style="left:96px;top:640px;width:760px"><p class="sub">The AI agent terminal for stocks and crypto.</p></div>`), 2.0, 8.6);
+    lightEnd(9.0); finish(); },
+};
+let DUR = 10;
+document.fonts.ready.then(() => {
+  SC[S]();
+  const imgs = [...document.querySelectorAll(".img")].map((e) => { const u = getComputedStyle(e).backgroundImage.slice(5, -2); return new Promise((r) => { const i = new Image(); i.onload = i.onerror = r; i.src = u; }); });
+  for (let i = 0; i < (D.coin || 0); i++) imgs.push(new Promise((r) => { const im = new Image(); im.onload = im.onerror = r; im.src = A(`spin/${String(i).padStart(3, "0")}.webp`); }));
+  imgs.push(...[...document.images].map((i) => i.complete ? 0 : new Promise((r) => (i.onload = i.onerror = r))));
+  for (const a of anims) if (a.pause) a.pause();
+  window.DUR = DUR;
+  window.seek = (t) => { for (const a of anims) { if (a.seek) a.seek(t); else a.currentTime = t * 1000; } };
+  window.seek(0);
+  Promise.all(imgs).then(() => (window.READY = true));
+});
+</script></body></html>

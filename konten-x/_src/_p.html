@@ -1,0 +1,186 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#ececf2;--ink:#23260f;--dim:#5d5f4c;--faint:#8b8b7c;--gold:#8a6420;--gold2:#c9a46a;--goldfill:#e2c58e;--up:#2e7d43;--down:#c0442f;--cream:#f4efe6;
+  --disp:"Archivo",sans-serif;--sans:"Inter Tight",sans-serif;--mono:"JetBrains Mono",monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1600px;height:900px;overflow:hidden}
+#p{position:relative;width:1600px;height:900px;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+.bgimg{position:absolute;inset:0;background-size:cover;background-position:center}
+.shL{position:absolute;inset:0;background:linear-gradient(90deg,rgba(20,16,10,.88),rgba(20,16,10,.5) 50%,rgba(20,16,10,.05))}
+.shB{position:absolute;inset:0;background:linear-gradient(0deg,rgba(20,16,10,.9),rgba(20,16,10,.25) 55%,rgba(20,16,10,.35))}
+.grain{position:absolute;inset:0;opacity:.06;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+#p.dark{color:var(--cream)}
+.dark .k{color:var(--goldfill)} .dark .sub{color:rgba(244,239,230,.8)} .dark .foot{color:rgba(244,239,230,.75);border-color:rgba(244,239,230,.2)}
+.head{position:absolute;left:72px;top:60px;display:flex;align-items:center;gap:14px;font:800 26px var(--sans);letter-spacing:.06em}
+.head img{width:46px;height:46px}
+.tag{position:absolute;right:72px;top:72px;font:600 15px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.dark .tag{color:rgba(244,239,230,.6)}
+.foot{position:absolute;left:72px;right:72px;bottom:52px;display:flex;justify-content:space-between;font:600 17px var(--mono);letter-spacing:.08em;color:var(--dim);border-top:1px solid rgba(35,38,15,.15);padding-top:20px}
+.k{font:700 17px var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
+h1{font-family:var(--disp);font-weight:900;font-stretch:112%;text-transform:uppercase;letter-spacing:-.01em;line-height:.9}
+.h-xl{font-size:150px}.h-l{font-size:108px}.h-m{font-size:78px}.h-s{font-size:56px}
+.sub{font:500 30px/1.4 var(--sans);color:var(--dim)}
+.abs{position:absolute}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.78),rgba(255,255,255,.45));box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 18px 40px -26px rgba(35,38,15,.45);border-radius:22px}
+.mono{font-family:var(--mono)}
+.up{color:var(--up)}.down{color:var(--down)}
+.grid9{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.q{padding:22px 26px;display:grid;grid-template-columns:1fr auto;row-gap:6px}
+.q b{font:800 26px var(--sans);letter-spacing:.04em}.q i{font:600 13px var(--mono);font-style:normal;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;align-self:center}
+.q .px{font:500 30px var(--mono)}.q .ch{font:600 20px var(--mono);text-align:right;align-self:end}
+.q svg{grid-column:1/3;width:100%;height:46px}
+.mx{display:grid;grid-template-columns:110px repeat(9,86px);gap:5px;font:600 15px var(--mono)}
+.mx div{height:58px;display:flex;align-items:center;justify-content:center;border-radius:8px}
+.mx .lb{justify-content:flex-end;padding-right:10px;color:var(--dim);background:none}
+.mx .tp{color:var(--dim);background:none;height:30px}
+.bars{display:flex;align-items:flex-end;gap:7px;height:330px}
+.bars span{flex:1;border-radius:6px 6px 0 0;background:#d8cdb9;position:relative}
+.bars span.zero{background:none;border-top:2px solid rgba(35,38,15,.2)}
+.bars span.best{background:linear-gradient(180deg,#c9a46a,#8a6420)}
+.bars span.neg{background:#e9c6bf}
+.code{font:500 27px/1.7 var(--mono);white-space:pre;color:var(--cream)}
+.code .c{color:#8f8a7a}.code .g{color:var(--goldfill)}
+.step{display:grid;grid-template-columns:70px 1fr;gap:18px;padding:22px 0;border-top:1px solid rgba(35,38,15,.12)}
+.step:first-child{border-top:0}
+.step b{font:900 54px/1 var(--disp);color:var(--gold2)}
+.step h3{font:700 27px var(--sans)}.step p{margin-top:6px;font:500 21px/1.45 var(--sans);color:var(--dim)}
+.pill{display:inline-block;padding:16px 30px;border-radius:999px;background:var(--ink);color:var(--cream);font:700 20px var(--sans);letter-spacing:.06em;text-transform:uppercase}
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:16px 0;border-top:1px solid rgba(35,38,15,.12);font:500 24px var(--sans)}
+.row:first-child{border-top:0}
+.row b{font:600 24px var(--mono)}
+</style></head><body><div id="p"></div>
+<script>
+const D = window.DATA || {}, id = new URLSearchParams(location.search).get("p"), P = document.getElementById("p");
+const A = (f) => `_assets/${f}`, H = (f) => `_hf/${f}`;
+const has = (f) => (D.hf || []).includes(f), pic = (f) => (has(f) ? H(f) : A("coin-stand.jpg"));
+const esc = (s) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const TK = D.token?.ticker || "$BCIO", CA = D.token?.ca, SITE = D.site || "bcio.trade";
+const AS = (D.watch?.assets) || [], BY = Object.fromEntries(AS.map((a) => [a.symbol, a])), MK = D.watch?.market || {};
+const fmtP = (v) => v >= 1000 ? v.toLocaleString("en-US", { maximumFractionDigits: 0 }) : v >= 1 ? v.toFixed(2) : v.toFixed(4);
+const pct = (v) => (v >= 0 ? "+" : "") + v.toFixed(2) + "%", cls = (v) => (v >= 0 ? "up" : "down");
+const html = (s) => { P.insertAdjacentHTML("beforeend", s); };
+const head = (tag = "") => html(`<div class="head"><img src="${A("logo.png")}">BCIO</div>${tag ? `<div class="tag">${tag}</div>` : ""}`);
+const foot = (l = SITE, r = `${TK} · Robinhood Chain`) => html(`<div class="foot"><span>${l}</span><span>${r}</span></div>`);
+const photo = (f, sh = "shL", pos = "center") => { P.classList.add("dark"); html(`<div class="bgimg" style="background-image:url(${pic(f)});background-position:${pos}"></div><div class="${sh}"></div><div class="grain"></div>`); };
+const spark = (arr, up) => { if (!arr?.length) return ""; const mn = Math.min(...arr), mx = Math.max(...arr), n = arr.length; const pts = arr.map((v, i) => `${(i / (n - 1) * 100).toFixed(2)},${(44 - (v - mn) / (mx - mn || 1) * 40).toFixed(2)}`).join(" "); return `<svg viewBox="0 0 100 46" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${up ? "#2e7d43" : "#c0442f"}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`; };
+const heat = (v) => { const k = Math.max(0, Math.min(1, v)); return `background:rgba(${214 - 100 * k},${178 - 92 * k},${112 - 80 * k},${.18 + .82 * k});color:${k > .62 ? "#f4efe6" : "#23260f"}`; };
+const pairOf = (k) => D.pairs?.[k]?.result;
+function lagChart(k, x, y, w) {
+  const r = pairOf(k); if (!r) return;
+  const best = r.best_lag_hours, mx = Math.max(...r.lag_curve.map((c) => Math.abs(c.corr)));
+  const bars = r.lag_curve.map((c) => `<span class="${c.lag === best ? "best" : c.corr < 0 ? "neg" : ""}" style="height:${Math.max(2, Math.abs(c.corr) / mx * 100)}%"></span>`).join("");
+  html(`<div class="card abs" style="left:${x}px;top:${y}px;width:${w}px;padding:34px 40px 26px">
+    <div style="display:flex;justify-content:space-between;font:600 17px var(--mono);color:var(--dim);letter-spacing:.06em"><span>${r.pair.replace("/", " ↔ ")} · ${r.window_days}d hourly</span><span><i style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#e9c6bf;font-style:normal"></i> negative</span></div>
+    <div class="bars" style="margin-top:22px">${bars}</div>
+    <div style="display:flex;justify-content:space-between;margin-top:12px;font:500 15px var(--mono);color:var(--faint)"><span>−12h</span><span>0</span><span>+12h</span></div></div>`);
+  return r;
+}
+const avg = (xs) => xs.reduce((s, v) => s + v, 0) / xs.length;
+function clusters() {
+  const S = D.matrix.symbols, M = D.matrix.matrix, st = ["NVDA", "TSLA", "QQQ"], ix = (s) => S.indexOf(s);
+  const inS = [], inC = [], x = [];
+  for (let i = 0; i < S.length; i++) for (let j = i + 1; j < S.length; j++) { const a = st.includes(S[i]), b = st.includes(S[j]); (a && b ? inS : !a && !b ? inC : x).push(M[i][j]); }
+  return { stocks: avg(inS), crypto: avg(inC), cross: avg(x) };
+}
+const POSTS = {
+  // ---------------- PRE LAUNCH
+  p01() { photo("hf01-closed.jpg"); head("Soon");
+    html(`<div class="abs" style="left:72px;top:250px"><p class="k">Friday · 4:00 PM ET</p><h1 class="h-l" style="margin-top:22px">Wall Street<br>closes.</h1><h1 class="h-l" style="margin-top:14px;color:var(--goldfill)">The market<br>doesn't.</h1></div>`); foot(SITE, "Robinhood Chain"); },
+  p02() { photo("hf05-bridge.jpg"); head("Soon");
+    html(`<div class="abs" style="left:72px;top:260px;width:900px"><p class="k">Stocks + crypto</p><h1 class="h-m" style="margin-top:22px">Two markets.<br>One read.</h1><p class="sub" style="margin-top:34px">Stock tokens and crypto, read as one market by an AI agent on Robinhood Chain.</p></div>`); foot(SITE, "Robinhood Chain"); },
+  p03() { photo("hf02-twin.jpg"); head("Soon");
+    html(`<div class="abs" style="left:72px;top:270px;width:860px"><p class="k">A question worth asking</p><h1 class="h-m" style="margin-top:22px">Does BTC<br>follow NVDA?</h1><p class="sub" style="margin-top:34px">Correlation, and the lag between them, hour by hour. Soon you can just ask.</p></div>`); foot(SITE, "Robinhood Chain"); },
+  p04() { photo("hf10-seal.jpg"); head("Soon");
+    html(`<div class="abs" style="left:72px;top:270px;width:860px"><p class="k">You stay in control</p><h1 class="h-m" style="margin-top:22px">One basket.<br>One signature.</h1><p class="sub" style="margin-top:34px">The agent proposes. Your wallet signs. Nothing moves without you.</p></div>`); foot(SITE, "Robinhood Chain"); },
+  p05() { html(`<div class="bgimg" style="background-image:url(${A("coin-stand.jpg")});left:560px"></div><div class="abs" style="left:0;top:0;bottom:0;width:760px;background:linear-gradient(90deg,#c9bfae 70%,rgba(201,191,174,0))"></div>`); head("Soon");
+    html(`<div class="abs" style="left:72px;top:290px"><p class="k">Robinhood Chain</p><h1 class="h-xl" style="margin-top:20px">${TK}</h1><h1 class="h-m" style="margin-top:10px;color:var(--gold)">Soon.</h1></div>`); foot(SITE, "AI agent terminal"); },
+  // ---------------- AFTER LAUNCH
+  a01() { html(`<div class="bgimg" style="background-image:url(${A("coin-stand.jpg")});left:560px"></div><div class="abs" style="left:0;top:0;bottom:0;width:760px;background:linear-gradient(90deg,#c9bfae 70%,rgba(201,191,174,0))"></div>`); head("Live");
+    html(`<div class="abs" style="left:72px;top:230px"><p class="k">Robinhood Chain</p><h1 class="h-xl" style="margin-top:20px">${TK}</h1><h1 class="h-m" style="margin-top:10px">is live.</h1>
+      <p class="sub" style="margin-top:34px;width:640px">The AI agent terminal for stocks and crypto is open.</p>
+      <p class="mono" style="margin-top:30px;font:600 20px var(--mono);color:var(--ink);width:700px;word-break:break-all">CA ${esc(CA || "[CA]")}</p></div>`); foot(); },
+  a02() { head(`The board · ${esc(MK.nyTime || "")}`);
+    html(`<div class="abs" style="left:72px;top:140px"><h1 class="h-s">Nine assets. One board.</h1></div>`);
+    html(`<div class="abs grid9" style="left:72px;right:72px;top:240px">${AS.map((a) => `<div class="card q"><b>${a.symbol}</b><i>${a.kind === "stock" ? "Stock token" : "Crypto"}</i><span class="px">${fmtP(a.price)}</span><span class="ch ${cls(a.change24h)}">${pct(a.change24h)}</span>${spark(a.spark, a.change7d >= 0)}</div>`).join("")}</div>`);
+    foot(`${SITE} · live data, CoinGecko`, `24h change · 7d line`); },
+  a03() { const r = lagChart("NVDA-BTC", 720, 150, 808); head("Correlation · lag");
+    html(`<div class="abs" style="left:72px;top:170px;width:600px"><h1 class="h-m">Does BTC<br>follow<br>NVDA?</h1>
+      <p class="sub" style="margin-top:30px">${r.best_lag_hours === 0 ? "Not with a lag. They move in the same hour." : r.best_lag_hours > 0 ? `BTC tends to move ${r.best_lag_hours}h after NVDA.` : `NVDA tends to move ${-r.best_lag_hours}h after BTC.`}</p>
+      <p class="mono" style="margin-top:28px;font:600 24px var(--mono)">corr <span style="color:var(--gold)">${r.corr_lag0.toFixed(2)}</span> · ${r.aligned_hours} hours aligned</p></div>`);
+    foot(`${SITE} · ${esc(D.when)}`, "Past data, not a forecast"); },
+  a04() { const r = lagChart("TSLA-SOL", 720, 150, 808); head("Correlation · lag");
+    html(`<div class="abs" style="left:72px;top:170px;width:600px"><h1 class="h-m">TSLA<br>and SOL.</h1>
+      <p class="sub" style="margin-top:30px">Correlation ${r.corr_lag0.toFixed(2)} over ${r.window_days} days. ${r.best_lag_hours === 0 ? "Best line up: the same hour." : `Best line up at ${r.best_lag_hours}h.`}</p>
+      <p class="mono" style="margin-top:28px;font:600 22px var(--mono)">14d · TSLA <span class="${cls(r.move_pct.TSLA)}">${pct(r.move_pct.TSLA)}</span> · SOL <span class="${cls(r.move_pct.SOL)}">${pct(r.move_pct.SOL)}</span></p></div>`);
+    foot(`${SITE} · ${esc(D.when)}`, "Past data, not a forecast"); },
+  a05() { const S = D.matrix.symbols, M = D.matrix.matrix; head("Correlation · 7d hourly");
+    html(`<div class="abs" style="left:72px;top:150px;width:480px"><h1 class="h-s">The whole<br>market,<br>one grid.</h1><p class="sub" style="margin-top:28px;font-size:25px">Darker gold means two assets move together. Stocks on top, crypto below.</p></div>`);
+    let g = `<div class="tp"></div>${S.map((s) => `<div class="tp">${s.slice(0, 4)}</div>`).join("")}`;
+    S.forEach((s, i) => { g += `<div class="lb">${s}</div>` + M[i].map((v, j) => `<div style="${i === j ? "background:rgba(35,38,15,.08)" : heat(v)}">${i === j ? "" : v.toFixed(2).replace("0.", ".")}</div>`).join(""); });
+    html(`<div class="abs card" style="left:600px;top:120px;padding:26px"><div class="mx">${g}</div></div>`); foot(SITE, "Pearson · hourly log returns"); },
+  a06() { photo("hf01-closed.jpg"); head(`${esc(MK.nyTime || "")}`);
+    html(`<div class="abs" style="left:72px;top:250px;width:900px"><p class="k">Wall Street ${MK.wallStreetOpen ? "is open" : "is closed"}</p><h1 class="h-l" style="margin-top:22px">Stock tokens<br>still trade.</h1>
+      <p class="sub" style="margin-top:34px">NVDA, TSLA and QQQ keep moving on chain, 24/7. BCIO reads them next to crypto, all weekend.</p></div>`); foot(); },
+  a07() { photo("hf06-shield.jpg", "shL"); head("Weekend Shield");
+    const cr = ["BTC", "ETH", "SOL"].map((s) => BY[s]).filter(Boolean);
+    html(`<div class="abs" style="left:72px;top:170px;width:760px"><h1 class="h-m">Weekend<br>Shield.</h1>
+      <p class="sub" style="margin-top:28px">When Wall Street is closed and crypto drops hard, the agent hedges part of your stock tokens to USDC. Inside limits you set on chain.</p>
+      <div style="margin-top:36px;display:flex;gap:16px">${cr.map((a) => `<div style="padding:18px 22px;border:1px solid rgba(244,239,230,.25);border-radius:14px;font:600 22px var(--mono)">${a.symbol} <span style="color:${a.change24h >= 0 ? "#8fd6a1" : "#ff9b85"}">${pct(a.change24h)}</span></div>`).join("")}</div>
+      <p class="mono" style="margin-top:16px;font:500 17px var(--mono);color:rgba(244,239,230,.6)">24h now · rule example: any move past 5% → sell 50%</p></div>`); foot(); },
+  a08() { photo("hf10-seal.jpg"); head("Baskets");
+    html(`<div class="abs" style="left:72px;top:200px;width:720px"><h1 class="h-m">Ask for<br>a basket.</h1><p class="sub" style="margin-top:28px">"Split 1,000 USDC: 50% TSLA, 50% SOL." The agent builds it. You review it and sign it in your own wallet.</p></div>`);
+    html(`<div class="abs card" style="right:90px;top:250px;width:520px;padding:34px 38px;color:var(--ink)"><p class="k">Basket · you sign</p>
+      <div class="row" style="margin-top:16px"><span>TSLA</span><b>50% · 500 USDC</b></div><div class="row"><span>SOL</span><b>50% · 500 USDC</b></div>
+      <div style="margin-top:26px"><span class="pill">Approve basket</span></div></div>`); foot(); },
+  a09() { head("Rebalancer");
+    const W = [["USDC", 40], ["NVDA", 20], ["QQQ", 15], ["BTC", 15], ["ETH", 10]];
+    html(`<div class="abs" style="left:72px;top:170px;width:620px"><h1 class="h-m">Set the<br>weights.<br>It keeps them.</h1><p class="sub" style="margin-top:28px">When a position drifts past the band, the agent trades it back. Only between your own tokens, only inside your limits.</p></div>`);
+    html(`<div class="abs card" style="left:790px;top:180px;width:740px;padding:40px 44px">${W.map(([s, w]) => `<div style="display:grid;grid-template-columns:110px 1fr 70px;align-items:center;gap:20px;padding:13px 0"><b style="font:700 24px var(--sans)">${s}</b><div style="height:22px;border-radius:11px;background:rgba(35,38,15,.08)"><div style="height:100%;width:${w * 2.2}%;border-radius:11px;background:linear-gradient(90deg,#e2c58e,#8a6420)"></div></div><span class="mono" style="font:600 22px var(--mono);text-align:right">${w}%</span></div>`).join("")}
+      <p class="mono" style="margin-top:18px;font:500 17px var(--mono);color:var(--faint)">band ±5% · checked every minute</p></div>`); foot(); },
+  a10() { photo("hf11-vault.jpg"); head("Agent permission");
+    html(`<div class="abs" style="left:72px;top:180px;width:820px"><h1 class="h-m">Your limits.<br>On chain.</h1></div>`);
+    html(`<div class="abs" style="left:72px;top:440px;width:760px;font:500 26px/1.5 var(--sans)">${[["Max per trade", "you choose"], ["Max per day", "you choose"], ["Expiry", "you choose"], ["Revoke", "one click, instant"]].map(([a, b]) => `<div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid rgba(244,239,230,.18)"><span>${a}</span><b style="font:600 24px var(--mono);color:var(--goldfill)">${b}</b></div>`).join("")}</div>`); foot(); },
+  a11() { head("The terminal");
+    html(`<div class="abs" style="left:72px;top:130px"><h1 class="h-s">Ask the market.</h1></div><div class="abs card" style="left:72px;right:72px;top:230px;bottom:120px;overflow:hidden;padding:0"><img src="${A("terminal.png")}" style="width:100%;display:block"></div>`); foot(`${SITE}/terminal.html`, "Analysis only. Not advice."); },
+  a12() { P.style.background = "#1b1a14"; P.classList.add("dark"); head("MCP server");
+    html(`<div class="abs" style="left:72px;top:160px"><h1 class="h-m">BCIO inside<br>Claude.</h1></div>
+      <div class="abs" style="left:72px;top:420px;right:72px;padding:36px 44px;border-radius:20px;background:#26241c;box-shadow:inset 0 0 0 1px rgba(244,239,230,.1)"><div class="code"><span class="c"># Claude Code</span>
+<span class="g">claude mcp add</span> bcio -- npx -y bcio-agent mcp
+
+<span class="c"># tools</span>
+get_quotes · market_status · correlate · correlation_matrix · weekend_shield · get_wallet</div></div>`); foot("npmjs.com/package/bcio-agent", "Read only. No keys."); },
+  a13() { P.style.background = "#1b1a14"; P.classList.add("dark"); head("CLI");
+    html(`<div class="abs" style="left:72px;top:140px"><h1 class="h-s">npx bcio-agent</h1></div>
+      <div class="abs" style="left:72px;top:250px;right:72px;bottom:120px;padding:30px 40px;border-radius:20px;background:#26241c;box-shadow:inset 0 0 0 1px rgba(244,239,230,.1);overflow:hidden"><pre class="code" style="font-size:21px;line-height:1.55">${esc(D.cli || "")}</pre></div>`); foot("npmjs.com/package/bcio-agent", "Nine assets in one command"); },
+  a14() { head("AI coins vs NVDA");
+    const rows = [["RENDER", pairOf("NVDA-RENDER")?.corr_lag0], ["TAO", pairOf("NVDA-TAO")?.corr_lag0], ["FET", D.matrix.matrix[0][D.matrix.symbols.indexOf("FET")]]].filter((r) => r[1] != null).sort((a, b) => b[1] - a[1]);
+    html(`<div class="abs" style="left:72px;top:170px;width:620px"><h1 class="h-m">Which AI coin<br>moves with<br>NVDA?</h1><p class="sub" style="margin-top:28px">Same hour correlation of hourly returns with Nvidia's stock token.</p></div>`);
+    html(`<div class="abs card" style="left:790px;top:200px;width:740px;padding:40px 44px">${rows.map(([s, v], i) => `<div style="display:grid;grid-template-columns:130px 1fr 90px;align-items:center;gap:20px;padding:18px 0"><b style="font:700 28px var(--sans)">${s}</b><div style="height:26px;border-radius:13px;background:rgba(35,38,15,.08)"><div style="height:100%;width:${v * 100}%;border-radius:13px;background:${i ? "#d8cdb9" : "linear-gradient(90deg,#e2c58e,#8a6420)"}"></div></div><span class="mono" style="font:600 26px var(--mono);text-align:right">${v.toFixed(2)}</span></div>`).join("")}</div>`);
+    foot(`${SITE} · ${esc(D.when)}`, "Past data, not a forecast"); },
+  a15() { const c = clusters(); head("Two markets");
+    html(`<div class="abs" style="left:72px;top:170px;width:620px"><h1 class="h-m">Stocks move<br>with stocks.<br>Crypto with<br>crypto.</h1></div>`);
+    html(`<div class="abs card" style="left:790px;top:200px;width:740px;padding:40px 44px">${[["Inside crypto", c.crypto], ["Inside stock tokens", c.stocks], ["Stocks ↔ crypto", c.cross]].map(([s, v], i) => `<div style="padding:16px 0;border-top:${i ? "1px solid rgba(35,38,15,.12)" : "0"}"><div style="display:flex;justify-content:space-between;font:600 24px var(--sans)"><span>${s}</span><b class="mono" style="font:600 26px var(--mono);color:var(--gold)">${v.toFixed(2)}</b></div><div style="margin-top:12px;height:14px;border-radius:7px;background:rgba(35,38,15,.08)"><div style="height:100%;width:${v * 100}%;border-radius:7px;background:linear-gradient(90deg,#e2c58e,#8a6420)"></div></div></div>`).join("")}
+      <p class="mono" style="margin-top:16px;font:500 17px var(--mono);color:var(--faint)">average pairwise correlation · 7d hourly</p></div>`);
+    html(`<div class="abs" style="left:72px;top:690px;width:640px"><p class="sub" style="font-size:24px">The link across the two is where BCIO looks for signals.</p></div>`); foot(); },
+  a16() { photo("hf09-kings.jpg"); head("Honest limits");
+    html(`<div class="abs" style="left:72px;top:200px;width:820px"><h1 class="h-m">Data,<br>not advice.</h1><p class="sub" style="margin-top:30px">Correlations describe the past, not the future. Stock tokens are not shares. Testnet tokens are for testing. You decide, you sign.</p></div>`); foot(); },
+  a17() { head("On chain"); const C = D.chain || {};
+    html(`<div class="abs" style="left:72px;top:160px;width:600px"><h1 class="h-m">The desk<br>is on<br>Robinhood<br>Chain.</h1><p class="sub" style="margin-top:26px;font-size:25px">Test tokens, oracle priced at real market prices. Try every flow before real money.</p></div>`);
+    html(`<div class="abs card" style="left:760px;top:190px;width:770px;padding:36px 42px">${[["Network", C.chainName || "Robinhood Chain Testnet"], ["Chain id", C.chainId || 46630], ["Desk", (C.desk || "").slice(0, 10) + "…" + (C.desk || "").slice(-6)], ["Agent", (C.agent || "").slice(0, 10) + "…" + (C.agent || "").slice(-6)], ["Faucet", "10,000 tUSDC a day"]].map(([a, b]) => `<div class="row"><span>${a}</span><b>${esc(b)}</b></div>`).join("")}</div>`); foot(`${SITE}/terminal.html`, "explorer.testnet.chain.robinhood.com"); },
+  a18() { head("How it reads");
+    html(`<div class="abs" style="left:72px;top:170px;width:520px"><h1 class="h-m">How BCIO<br>reads the<br>market.</h1></div>`);
+    html(`<div class="abs card" style="left:660px;top:130px;width:870px;padding:26px 44px">${[["Prices", "Stock tokens and crypto from CoinGecko, every hour, weekends included."], ["Align", "Both series lined up by the hour and turned into log returns."], ["Correlate", "Same hour correlation, then a scan from −12h to +12h for the lag."], ["Act", "Signal → basket or rule. Your wallet signs, limits live on chain."]].map(([h, p], i) => `<div class="step"><b>${i + 1}</b><div><h3>${h}</h3><p>${p}</p></div></div>`).join("")}</div>`); foot(); },
+  a19() { photo("hf04-sunday.jpg"); head("Built for the weekend");
+    html(`<div class="abs" style="left:72px;top:250px;width:900px"><p class="k">Saturday · Sunday</p><h1 class="h-l" style="margin-top:22px">The floor<br>is empty.</h1><p class="sub" style="margin-top:34px">Crypto still moves. Stock tokens still trade. BCIO is still reading.</p></div>`); foot(); },
+  a20() { html(`<div class="bgimg" style="background-image:url(${A("coin-stand.jpg")});left:700px"></div><div class="abs" style="left:0;top:0;bottom:0;width:900px;background:linear-gradient(90deg,#c9bfae 72%,rgba(201,191,174,0))"></div>`); head("Links");
+    html(`<div class="abs" style="left:72px;top:180px;width:760px"><h1 class="h-m">Everything<br>BCIO.</h1></div><div class="abs" style="left:72px;top:420px;width:740px">${[["Site", SITE], ["Terminal", SITE + "/terminal.html"], ["npm", "npx bcio-agent"], ["GitHub", "github.com/bcioagents/bcio-agent"], ["CA", CA ? CA.slice(0, 12) + "…" + CA.slice(-6) : "[CA]"]].map(([a, b]) => `<div class="row"><span>${a}</span><b style="font-size:21px">${esc(b)}</b></div>`).join("")}</div>`); foot(); },
+};
+document.fonts.ready.then(async () => {
+  POSTS[id]();
+  await Promise.all([...document.images].map((i) => i.complete ? 0 : new Promise((r) => (i.onload = i.onerror = r))));
+  const bg = [...document.querySelectorAll(".bgimg")].map((e) => new Promise((r) => { const i = new Image(); i.onload = i.onerror = r; i.src = getComputedStyle(e).backgroundImage.slice(5, -2); }));
+  await Promise.all(bg); window.READY = true;
+});
+</script></body></html>

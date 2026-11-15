@@ -1,0 +1,4 @@
+// server statis kecil untuk folder kit (tanpa python)
+import http from "node:http"; import fs from "node:fs"; import path from "node:path";
+const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp", ".mp4": "video/mp4", ".json": "application/json" };
+export const serve = (root, port) => new Promise((r) => { const s = http.createServer((q, s2) => { const f = path.join(root, decodeURIComponent(new URL(q.url, "http://x").pathname)); if (!f.startsWith(root) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { s2.writeHead(404).end(); return; } s2.writeHead(200, { "content-type": T[path.extname(f)] || "application/octet-stream" }); fs.createReadStream(f).pipe(s2); }).listen(port, "127.0.0.1", () => r(s)); });

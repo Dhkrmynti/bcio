@@ -1,0 +1,5 @@
+_src/_render/*.png
+_src/_render/spin_png/
+_src/_render/*.log
+_src/_tools/.f-*/
+_src/_tools/.demo/
