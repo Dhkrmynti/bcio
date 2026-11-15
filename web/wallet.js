@@ -40,8 +40,9 @@ function errText(err) {
   return (err?.shortMessage || err?.message || String(err)).split('\n')[0];
 }
 
-// halaman bisa dibuka dari server statis (:5190) atau dari engine (:5191); API selalu di engine
-export const API = location.port === '5191' ? '' : 'http://127.0.0.1:5191';
+// halaman dilayani engine (lokal :5191, produksi bcio.trade) → API di origin yang sama;
+// hanya server statis dev (:5190) yang memanggil engine lokal
+export const API = location.port === '5190' ? 'http://127.0.0.1:5191' : '';
 
 async function api(path, body) {
   const r = await fetch(API + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {});

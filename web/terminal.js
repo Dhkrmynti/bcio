@@ -1,5 +1,5 @@
 // BCIO terminal (browser). Data & agent berasal dari engine lokal (engine/src/server.js).
-import { W, API, initWallet, refreshAll, executeBasket, setDraft } from './wallet.js?v=2';
+import { W, API, initWallet, refreshAll, executeBasket, setDraft } from './wallet.js?v=3';
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
