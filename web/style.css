@@ -337,11 +337,11 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .wk-row i {
   aspect-ratio: 1; border-radius: 22%;
   background: rgba(255, 255, 255, .06);
-  transition: background-color .35s, box-shadow .35s, transform .35s;
+  transition: transform .35s;
 }
 .wk-row i.ws { box-shadow: inset 0 0 0 1.5px rgba(236, 236, 242, .55); }
-.wk-row i.on { background: linear-gradient(160deg, #ffd884, #c98a1e); box-shadow: 0 0 10px rgba(255, 190, 80, .35); }
-.wk-row i.on.ws { background: #f4efe4; box-shadow: 0 0 10px rgba(244, 239, 228, .3); }
+.wk-row i.on { background: linear-gradient(160deg, #ffd884, #c98a1e); }
+.wk-row i.on.ws { background: #f4efe4; }
 .always .burst { color: #ececf2; }
 .wk-row i.now { transform: scale(1.35); box-shadow: 0 0 0 2px #fff, 0 0 18px rgba(255, 210, 120, .9); }
 .always-stats {

@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
-export const COIN_URL = 'assets/coinball.glb?v=18';
+export const COIN_URL = 'assets/coinball.glb?v=20';
 
 // studio foto produk: ruang gelap dengan softbox terang -> emas dapat pantulan kontras
 export function studioScene() {
@@ -65,7 +65,7 @@ const RING_TEXT = 'BCIO TERMINAL \u00b7 ROBINHOOD CHAIN \u00b7 STOCKS + CRYPTO \
 let medal = null;
 export function medalMaps() {
   if (medal) return medal;
-  const S = innerWidth < 760 ? 1024 : 2048;
+  const S = innerWidth < 760 ? 512 : 1024; // 2048 dulu membekukan halaman ~1 detik saat dibuka
   const k = S / 2;                       // 1 satuan koin = k piksel
   const hc = document.createElement('canvas');
   hc.width = hc.height = S;

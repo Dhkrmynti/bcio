@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { studioScene, makeWear, tuneGold, loadCoins, DPR, LOW } from './gold.js?v=20';
+import { studioScene, makeWear, tuneGold, loadCoins, DPR, LOW } from './gold.js?v=23';
 
 // ---------- ikon starburst (dipakai di judul & kartu kaca) ----------
 const rays = Array.from({ length: 18 }, (_, i) => {
@@ -27,7 +27,7 @@ try {
 }
 renderer.setPixelRatio(DPR);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -198,6 +198,9 @@ function instance(root) {
 
 loadCoins().then((gltf) => {
   const root = gltf.scene;
+  // grup HiRes = mesh detail penuh untuk section lain, tidak digambar di hero
+  const hires = root.getObjectByName('HiRes');
+  if (hires) hires.parent.remove(hires);
   // jari-jari = rata-rata setengah sisi kotak pembatas (bukan diagonal kotak)
   const box = new THREE.Box3().setFromObject(root);
   const size = box.getSize(new THREE.Vector3());
@@ -250,8 +253,47 @@ function frame() {
     deco.ring.rotation.z = 0.2 + Math.sin(t * 0.4) * 0.12;
     deco.ring.position.y = anchors.ring.y + Math.sin(t * 0.8) * 0.15;
   }
-  if (heroVisible) renderer.render(scene, camera);
+  if (heroVisible) {
+    adapt(dt);
+    tick++;
+    if (quality < 3 || tick % 2 === 0) {
+      // bola berputar pelan (20 dtk/putaran): peta bayangan cukup diperbarui tiap 3 frame (q>=2: tiap 6)
+      renderHero(tick % (quality >= 2 ? 6 : 3) === 0 || appear < 1);
+    }
+  }
   requestAnimationFrame(frame);
+}
+
+// Depth pre-pass: koin saling menumpuk seperti sisik, jadi tanpa ini tiap piksel dihitung berkali-kali.
+// Lintasan pertama hanya mengisi depth, lintasan kedua menghitung warna sekali per piksel (GPU ~2x lebih ringan).
+const depthOnly = new THREE.MeshBasicMaterial({ colorWrite: false });
+function renderHero(updateShadow) {
+  renderer.shadowMap.needsUpdate = false;
+  scene.overrideMaterial = depthOnly;
+  renderer.render(scene, camera);
+  scene.overrideMaterial = null;
+  renderer.shadowMap.needsUpdate = updateShadow;
+  renderer.autoClear = false;
+  renderer.clear(true, false, false);
+  renderer.render(scene, camera);
+  renderer.autoClear = true;
+}
+
+// ---------- kualitas adaptif ----------
+// Ukur waktu frame; kalau perangkat tidak kuat (< ~45 fps), turunkan kualitas bertahap:
+// 1 = resolusi 1x, 2 = bayangan diperbarui lebih jarang, 3 = hero digambar 30 fps.
+let quality = 0, tick = 0, acc = 0, cnt = 0, warm = 0;
+renderer.shadowMap.autoUpdate = false;
+function adapt(dt) {
+  if (appear < 1 || quality >= 3) return;
+  if (warm < 30) { warm++; return; }          // abaikan frame awal (kompilasi shader dsb.)
+  acc += dt; cnt++;
+  if (cnt < 60) return;
+  const avg = acc / cnt; acc = 0; cnt = 0;
+  if (avg <= 1 / 45) return;
+  quality++;
+  warm = 0;
+  if (quality === 1 && renderer.getPixelRatio() > 1) { renderer.setPixelRatio(1); measure(); }
 }
 
 // CRYPTO selalu memenuhi lebar baris: atur lebar huruf (sumbu wdth font Archivo)

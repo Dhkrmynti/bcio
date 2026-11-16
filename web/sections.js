@@ -1,33 +1,46 @@
 // Section di bawah hero: showcase koin, tumpukan "grow", dan hujan koin CTA.
 // Semua koin diambil dari model Blender yang sama dengan hero (assets/coinball.glb).
 import * as THREE from 'three';
-import { studioScene, makeWear, tuneGold, loadCoins, DPR, LOW } from './gold.js?v=20';
+import { studioScene, makeWear, tuneGold, loadCoins, DPR, LOW } from './gold.js?v=23';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const easeOut = (t) => 1 - Math.pow(1 - t, 3);
 
-// ---------- panggung: satu renderer per canvas, hanya digambar saat terlihat ----------
+// ---------- panggung: SATU renderer WebGL bersama untuk semua section ----------
+// Dulu tiap canvas punya konteks WebGL sendiri; membuat konteks baru ~170 ms dan membekukan scroll.
+// Sekarang tiap section di-render bergantian di satu renderer lalu disalin ke canvas 2D section itu.
+let shared = null;
+function sharedRenderer() {
+  if (shared) return shared;
+  // OffscreenCanvas + bitmaprenderer: hasil render dipindah ke canvas section tanpa salin (zero-copy)
+  const off = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(2, 2) : undefined;
+  shared = new THREE.WebGLRenderer({ canvas: off, antialias: !LOW, alpha: true, powerPreference: 'high-performance' });
+  shared.zeroCopy = !!(off && off.transferToImageBitmap);
+  shared.setPixelRatio(1); // ukuran diatur per section dalam piksel perangkat
+  shared.toneMapping = THREE.ACESFilmicToneMapping;
+  shared.outputColorSpace = THREE.SRGBColorSpace;
+  shared.shadowMap.enabled = !LOW;
+  shared.shadowMap.type = THREE.PCFSoftShadowMap;
+  shared.pmrem = new THREE.PMREMGenerator(shared);
+  return shared;
+}
 const stages = [];
-function stage(canvas, { fov = 30, shadows = false } = {}) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, alpha: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(DPR);
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  if (shadows && !LOW) {
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  }
+function stage(canvas, { fov = 30 } = {}) {
+  const renderer = sharedRenderer();
+  const ctx = renderer.zeroCopy ? canvas.getContext('bitmaprenderer') : canvas.getContext('2d');
   const scene = new THREE.Scene();
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(studioScene(), 0.02).texture;
+  // lingkungan studio dihitung sekali dan dipakai semua section
+  renderer.env ??= renderer.pmrem.fromScene(studioScene(), 0.02).texture;
+  scene.environment = renderer.env;
   const camera = new THREE.PerspectiveCamera(fov, 1, 0.1, 200);
-  const st = { canvas, renderer, scene, camera, visible: false, update: null, aspect: 1, slide: canvas.closest('.slide') };
+  const st = { canvas, ctx, renderer, scene, camera, visible: false, update: null, aspect: 1, slide: canvas.closest('.slide') };
   const resize = () => {
     const r = canvas.getBoundingClientRect();
     if (!r.width || !r.height) return;
-    renderer.setSize(r.width, r.height, false);
+    canvas.width = Math.round(r.width * DPR);
+    canvas.height = Math.round(r.height * DPR);
     camera.aspect = st.aspect = r.width / r.height;
     camera.updateProjectionMatrix();
     st.onResize?.();
@@ -38,6 +51,16 @@ function stage(canvas, { fov = 30, shadows = false } = {}) {
   stages.push(st);
   return st;
 }
+function draw(st) {
+  const { canvas, renderer } = st, w = canvas.width, h = canvas.height;
+  if (!w || !h) return;
+  const size = renderer.getSize(_v2);
+  if (size.x !== w || size.y !== h) renderer.setSize(w, h, false);
+  renderer.render(st.scene, st.camera);
+  if (renderer.zeroCopy) st.ctx.transferFromImageBitmap(renderer.domElement.transferToImageBitmap());
+  else { st.ctx.clearRect(0, 0, w, h); st.ctx.drawImage(renderer.domElement, 0, 0); }
+}
+const _v2 = new THREE.Vector2();
 
 // progres animasi sebuah slide: 0 saat slide tiba, 1 setelah `dur` detik. Slide yang tidak aktif = 0,
 // jadi animasinya diputar ulang setiap kali slide itu didatangi lagi.
@@ -50,8 +73,9 @@ function slideAge(el) { return (performance.now() - (arrivedAt.get(el) ?? perfor
 
 // ---------- koin dari glTF ----------
 // parts = [{ geometry, material }] untuk satu desain (3 material: bingkai, bidang, relief)
-async function coinParts(gltf, key) {
-  const idx = gltf.parser.json.meshes.findIndex((m) => m.name === 'Coin_' + key);
+async function coinParts(gltf, key, prefix = 'Coin_') {
+  let idx = gltf.parser.json.meshes.findIndex((m) => m.name === prefix + key);
+  if (idx < 0) idx = gltf.parser.json.meshes.findIndex((m) => m.name === 'Coin_' + key);
   const obj = await gltf.parser.getDependency('mesh', idx);
   const parts = [];
   obj.traverse((o) => { if (o.isMesh) parts.push({ geometry: o.geometry, material: o.material }); });
@@ -175,7 +199,7 @@ function initShowcase(designs) {
 // =====================================================================
 function initGrow(designs) {
   const section = document.getElementById('grow');
-  const st = stage(section.querySelector('canvas'), { fov: 30, shadows: true });
+  const st = stage(section.querySelector('canvas'), { fov: 30 });
   const cam = st.camera;
   const look = new THREE.Vector3(0, 1.9, 0);
 
@@ -533,9 +557,9 @@ function loop() {
   const t = clock.elapsedTime;
   alwaysTick(t, dt);
   for (const st of stages) {
-    if (!st.visible || !st.update) continue;
+    if (!st.visible || !st.update || st.ready === false) continue;
     st.update(t, dt);
-    st.renderer.render(st.scene, st.camera);
+    draw(st);
   }
   requestAnimationFrame(loop);
 }
@@ -543,16 +567,33 @@ function loop() {
 loadCoins().then(async (gltf) => {
   const designs = {};
   for (const k of KEYS) designs[k] = await coinParts(gltf, k);
+  // versi low-poly untuk koin yang tampil kecil dan banyak (tumpukan, hujan koin)
+  const designsLo = {};
+  for (const k of KEYS) designsLo[k] = await coinParts(gltf, k, 'Lo_');
   // Kanvas 3D tiap section baru dibuat saat section hampir terlihat (dulu 5 WebGL sekaligus saat load).
-  const lazy = [['show', initShowcase], ['sync', initSync], ['agent', initAgentCoins], ['grow', initGrow], ['start', initRain]];
-  const lazyIO = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      lazyIO.unobserve(e.target);
-      lazy.find(([id]) => id === e.target.id)[1](designs);
+  const lazy = [['show', initShowcase], ['sync', initSync], ['agent', initAgentCoins], ['grow', () => initGrow(designsLo)], ['start', () => initRain(designsLo)]];
+  // Shader dikompilasi async (tidak membekukan scroll); stage baru digambar setelah siap.
+  const done = new Set();
+  const init = (id) => {
+    if (done.has(id)) return;
+    done.add(id);
+    const before = stages.length;
+    lazy.find(([k]) => k === id)[1](designs); 
+    for (const st of stages.slice(before)) {
+      st.ready = false;
+      const ok = () => { st.ready = true; };
+      st.renderer.compileAsync ? st.renderer.compileAsync(st.scene, st.camera).then(ok, ok) : ok();
     }
-  }, { rootMargin: '600px 0px' });
+  };
+  const lazyIO = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) { lazyIO.unobserve(e.target); init(e.target.id); }
+  }, { rootMargin: '1200px 0px' });
   lazy.forEach(([id]) => { const el = document.getElementById(id); if (el) lazyIO.observe(el); });
+  // saat halaman diam, siapkan section berikutnya satu per satu supaya tidak tersendat ketika di-scroll
+  const idle = window.requestIdleCallback || ((f) => setTimeout(f, 300));
+  const queue = lazy.map(([id]) => id);
+  const next = () => { const id = queue.shift(); if (!id) return; init(id); setTimeout(() => idle(next, { timeout: 4000 }), 900); };
+  setTimeout(() => idle(next, { timeout: 4000 }), 2500);
   document.body.classList.add('coins-ready');
   loop();
 }).catch((err) => console.error('Koin gagal dimuat', err));
