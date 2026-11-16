@@ -64,7 +64,7 @@ The board right now.
 
 NVDA, TSLA and QQQ as stock tokens next to BTC, ETH, SOL and the AI coins. Nine assets, one screen, 24/7.
 
-bcio.trade/terminal.html
+bcio.trade/terminal
 
 post/03-btc-vs-nvda-lag.png
 Does BTC follow NVDA?
@@ -121,7 +121,7 @@ Ask the market.
 
 Prices, correlations, the lag, the weekend check, baskets and rules. One terminal, one chat.
 
-bcio.trade/terminal.html
+bcio.trade/terminal
 
 post/12-bcio-in-claude.png
 BCIO inside Claude.
@@ -172,7 +172,7 @@ post/20-links.png
 Everything BCIO.
 
 Site: bcio.trade
-Terminal: bcio.trade/terminal.html
+Terminal: bcio.trade/terminal
 CLI and MCP: npx bcio-agent
 GitHub: github.com/bcioagents/bcio-agent
 CA: [CA]
@@ -202,7 +202,7 @@ Does BTC follow NVDA? We asked.
 
 Correlation 0.41, same hour. No lag.
 
-Ask any pair: bcio.trade/terminal.html
+Ask any pair: bcio.trade/terminal
 
 video/bcio-matrix.mp4
 Nine assets. 36 pairs. One grid.

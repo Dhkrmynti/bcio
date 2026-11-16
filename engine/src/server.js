@@ -1,5 +1,5 @@
 // Server lokal BCIO: menyajikan folder web/ (landing + terminal) dan API engine.
-//   npm start  ->  http://localhost:5191/terminal.html
+//   npm start  ->  http://localhost:5191/terminal
 // API key Claude hanya ada di sini (dibaca dari .env), tidak pernah dikirim ke browser.
 import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
@@ -39,7 +39,10 @@ async function readBody(req, limit = 20_000) {
 }
 
 async function serveStatic(req, res, urlPath) {
-  const rel = decodeURIComponent(urlPath === '/' ? '/index.html' : urlPath);
+  // alamat bersih: /terminal -> terminal.html; /x.html dialihkan ke /x
+  if (/\.html$/.test(urlPath)) { res.writeHead(301, { location: urlPath.replace(/(index)?\.html$/, '') || '/' }); return res.end(); }
+  let rel = decodeURIComponent(urlPath === '/' ? '/index.html' : urlPath);
+  if (!path.extname(rel)) rel += '.html';
   const file = path.resolve(WEB, '.' + rel);
   if (!file.startsWith(WEB + path.sep)) return json(res, 403, { error: 'forbidden' });
   try {
@@ -166,7 +169,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`BCIO engine on http://${HOST}:${PORT}  (terminal: /terminal.html)`);
+  console.log(`BCIO engine on http://${HOST}:${PORT}  (terminal: /terminal)`);
   if (!process.env.ANTHROPIC_API_KEY) console.warn('ANTHROPIC_API_KEY is not set: the agent chat will fail.');
   startLoop();
 });

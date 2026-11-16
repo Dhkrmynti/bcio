@@ -15,7 +15,7 @@ const ids = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(N
 const b = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
 if (ids.includes("a11") && !fs.existsSync(path.join(root, "_assets/terminal.png"))) {
   const p = await b.newPage({ viewport: { width: 1456, height: 860 }, deviceScaleFactor: 2 });
-  await p.goto(`https://${DATA.site}/terminal.html`, { waitUntil: "networkidle" }); await p.waitForTimeout(2500);
+  await p.goto(`https://${DATA.site}/terminal`, { waitUntil: "networkidle" }); await p.waitForTimeout(2500);
   await p.fill("#q", "Wall Street is closed. What is moving and which stock tokens are exposed?"); await p.keyboard.press("Enter");
   await p.waitForTimeout(1500); await p.waitForFunction(() => !document.querySelector(".send").disabled, null, { timeout: 180000 });
   await p.waitForTimeout(6000); await p.screenshot({ path: path.join(root, "_assets/terminal.png") }); await p.close();

@@ -16,7 +16,7 @@ Buka http://localhost:5190.
 cd engine && npm install && npm start
 ```
 
-Buka http://localhost:5191/terminal.html. Butuh `ANTHROPIC_API_KEY` di `engine/.env` (lihat `engine/.env.example`). Detail ada di `engine/README.md`.
+Buka http://localhost:5191/terminal. Butuh `ANTHROPIC_API_KEY` di `engine/.env` (lihat `engine/.env.example`). Detail ada di `engine/README.md`.
 
 ## Isi proyek
 

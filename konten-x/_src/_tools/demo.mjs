@@ -14,7 +14,7 @@ const yOf = (sel) => p.evaluate((s) => document.querySelector(s).getBoundingClie
 await p.goto(SITE + "/", { waitUntil: "load" }); await W(5000);            // tunggu koin 3D dimuat (bagian ini dipotong)
 const READY = Date.now(); await W(4000);
 for (const s of ["#show", "#sync", "#always", "#agent", "#grow"]) { await glide(await yOf(s), 2000); await W(2600); }
-await p.goto(SITE + "/terminal.html", { waitUntil: "networkidle" }); await W(2500);
+await p.goto(SITE + "/terminal", { waitUntil: "networkidle" }); await W(2500);
 await p.click("#q"); await p.keyboard.type(Q, { delay: 55 }); await W(500); await p.keyboard.press("Enter");
 await W(1500); await p.waitForFunction(() => !document.querySelector(".send").disabled, null, { timeout: 180000 }); await W(3500);
 const SPAN = (Date.now() - READY) / 1000; await p.close(); await ctx.close(); await b.close();

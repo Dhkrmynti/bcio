@@ -12,7 +12,7 @@ Engine lintas aset untuk terminal BCIO:
 ```bash
 cd engine && npm install
 cp .env.example .env          # isi ANTHROPIC_API_KEY
-npm start                     # http://localhost:5191/terminal.html
+npm start                     # http://localhost:5191/terminal
 ```
 
 Tanpa langkah lain, terminal sudah membaca mainnet (saldo, harga Chainlink) dan basket bisa dieksekusi: user menandatangani swap Uniswap di wallet sendiri. Trade otomatis butuh kontrak `BcioAgent`:

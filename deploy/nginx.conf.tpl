@@ -12,6 +12,7 @@ server {
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
     client_max_body_size 64k;
+    absolute_redirect off;            # pengalihan relatif: jangan bocorkan port internal :8443
     limit_req_status 429;
 
     proxy_http_version 1.1;
@@ -40,8 +41,12 @@ server {
     gzip_comp_level 6;
     gzip_min_length 1024;
     gzip_types text/css application/javascript application/json image/svg+xml model/gltf-binary;
+    # alamat bersih: /terminal melayani terminal.html; /terminal.html dan /index.html dialihkan permanen
+    location = / { try_files /index.html =404; add_header Cache-Control "no-cache"; }
+    location = /index.html { return 301 /; }
+    location ~ ^/(.+)\.html$ { return 301 /$1$is_args$args; }
     location / {
-        try_files $uri $uri/ =404;
+        try_files $uri $uri.html $uri/ =404;
         add_header Cache-Control "no-cache";          # html/js/css: selalu dicek ulang (304 kalau sama)
     }
     location /assets/ {
