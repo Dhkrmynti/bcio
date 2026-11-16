@@ -9,7 +9,7 @@ const cliFile = path.join(root, "_assets/cli.txt");
 if (!fs.existsSync(cliFile)) fs.writeFileSync(cliFile, execFileSync("node", [path.join(root, "../../../bcio-agent/bin/bcio.mjs")], { env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0" } }).toString());
 DATA.cli = fs.readFileSync(cliFile, "utf8").replace(/\x1b\[[0-9;]*m/g, "");
 const PRE = ["wall-street-closes", "two-markets-one-read", "does-btc-follow-nvda", "one-basket-one-signature", "bcio-soon"];
-const POST = ["bcio-is-live", "the-board", "btc-vs-nvda-lag", "tsla-and-sol", "correlation-matrix", "wall-street-closed", "weekend-shield", "baskets", "rebalancer", "your-limits-on-chain", "the-terminal", "bcio-in-claude", "cli", "ai-coins-vs-nvda", "two-markets", "data-not-advice", "the-desk-on-chain", "how-it-reads", "built-for-the-weekend", "links"];
+const POST = ["bcio-is-live", "the-board", "btc-vs-nvda-lag", "tsla-and-sol", "correlation-matrix", "wall-street-closed", "weekend-shield", "baskets", "rebalancer", "your-limits-on-chain", "the-terminal", "bcio-in-claude", "cli", "ai-coins-vs-nvda", "two-markets", "data-not-advice", "the-desk-on-chain", "how-it-reads", "built-for-the-weekend", "links", "buyback-and-burn"];
 const NAMES = {}; PRE.forEach((n, i) => (NAMES["p" + String(i + 1).padStart(2, "0")] = String(i + 1).padStart(2, "0") + "-" + n)); POST.forEach((n, i) => (NAMES["a" + String(i + 1).padStart(2, "0")] = String(i + 1).padStart(2, "0") + "-" + n));
 const ids = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(NAMES);
 const b = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });

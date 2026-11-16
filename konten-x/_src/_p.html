@@ -57,6 +57,12 @@ const A = (f) => `_assets/${f}`, H = (f) => `_hf/${f}`;
 const has = (f) => (D.hf || []).includes(f), pic = (f) => (has(f) ? H(f) : A("coin-stand.jpg"));
 const esc = (s) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 const TK = D.token?.ticker || "$BCIO", CA = D.token?.ca, SITE = D.site || "bcio.trade";
+
+// ---------- buyback & burn: angka live dari /studio (bcio.trade/api/token) ----------
+const BRN = D.burns || {}, LAST = (BRN.burns || []).find((b) => b.kind === "buyback") || null;
+const NBB = (BRN.burns || []).filter((b) => b.kind === "buyback").length;
+const tok = (v) => Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const DEADPCT = BRN.deadBalance ? (Number(BRN.deadBalance) / 1e9 * 100).toFixed(2) : null;
 const AS = (D.watch?.assets) || [], BY = Object.fromEntries(AS.map((a) => [a.symbol, a])), MK = D.watch?.market || {};
 const fmtP = (v) => v >= 1000 ? v.toLocaleString("en-US", { maximumFractionDigits: 0 }) : v >= 1 ? v.toFixed(2) : v.toFixed(4);
 const pct = (v) => (v >= 0 ? "+" : "") + v.toFixed(2) + "%", cls = (v) => (v >= 0 ? "up" : "down");
@@ -174,6 +180,15 @@ get_quotes · market_status · correlate · correlation_matrix · weekend_shield
     html(`<div class="abs card" style="left:660px;top:130px;width:870px;padding:26px 44px">${[["Prices", "Stock tokens and crypto from CoinGecko, every hour, weekends included."], ["Align", "Both series lined up by the hour and turned into log returns."], ["Correlate", "Same hour correlation, then a scan from −12h to +12h for the lag."], ["Act", "Signal → basket or rule. Your wallet signs, limits live on chain."]].map(([h, p], i) => `<div class="step"><b>${i + 1}</b><div><h3>${h}</h3><p>${p}</p></div></div>`).join("")}</div>`); foot(); },
   a19() { photo("hf04-sunday.jpg"); head("Built for the weekend");
     html(`<div class="abs" style="left:72px;top:250px;width:900px"><p class="k">Saturday · Sunday</p><h1 class="h-l" style="margin-top:22px">The floor<br>is empty.</h1><p class="sub" style="margin-top:34px">Crypto still moves. Stock tokens still trade. BCIO is still reading.</p></div>`); foot(); },
+  a21() { photo("hf07-fire.jpg", "shL"); head(`Buyback and burn #${NBB || 1}`);
+    html(`<div class="abs" style="left:72px;top:170px;width:820px"><p class="k" style="color:var(--goldfill)">${TK} · on chain</p><h1 class="h-m" style="margin-top:18px">Bought back.<br>Burned.</h1>
+      <p class="sub" style="margin-top:28px">Every token the buyback bought went straight to the dead address.</p></div>`);
+    html(`<div class="abs card" style="left:930px;top:200px;width:600px;padding:34px 40px;color:var(--ink)">
+      <div class="row"><span>Spent</span><b>$${LAST ? Number(LAST.usd).toLocaleString("en-US") : "–"} · ${LAST ? Number(LAST.spentEth).toFixed(4) : "–"} ETH</b></div>
+      <div class="row"><span>Bought & burned</span><b>${LAST ? tok(LAST.burned) : "–"} ${TK}</b></div>
+      <div class="row"><span>Total in dead address</span><b>${tok(BRN.deadBalance)} ${TK}</b></div>
+      <div class="row"><span>Share of supply</span><b>${DEADPCT || "–"}%</b></div></div>`);
+    foot(SITE, "robinhoodchain.blockscout.com"); },
   a20() { html(`<div class="bgimg" style="background-image:url(${A("coin-stand.jpg")});left:700px"></div><div class="abs" style="left:0;top:0;bottom:0;width:900px;background:linear-gradient(90deg,#c9bfae 72%,rgba(201,191,174,0))"></div>`); head("Links");
     html(`<div class="abs" style="left:72px;top:180px;width:760px"><h1 class="h-m">Everything<br>BCIO.</h1></div><div class="abs" style="left:72px;top:420px;width:740px">${[["Site", SITE], ["Terminal", SITE + "/terminal"], ["npm", "npx bcio-agent"], ["GitHub", "github.com/bcioagents/bcio-agent"], ["CA", CA ? CA.slice(0, 12) + "…" + CA.slice(-6) : "[CA]"]].map(([a, b]) => `<div class="row"><span>${a}</span><b style="font-size:21px">${esc(b)}</b></div>`).join("")}</div>`); foot(); },
 };

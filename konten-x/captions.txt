@@ -1,6 +1,6 @@
 BCIO · X captions
 Angka di post after launch dibaca live dari bcio.trade dan mesin korelasi BCIO pada saat gambar dirender.
-Ganti [CA] dengan contract address $BCIO setelah token live (lalu render ulang a01, a20, caoutro dan video CA, lihat _src/README.txt).
+Ganti 0x3305761Ad2530277fD26D3A4f1B088865f7c86b0 dengan contract address $BCIO setelah token live (lalu render ulang a01, a20, caoutro dan video CA, lihat _src/README.txt).
 Sengaja tanpa tanda pisah panjang.
 
 
@@ -44,7 +44,7 @@ BCIO reads stock tokens and crypto as one market: correlations, the lag between 
 
 Here it is, running.
 
-CA: [CA]
+CA: 0x3305761Ad2530277fD26D3A4f1B088865f7c86b0
 bcio.trade
 
 
@@ -56,7 +56,7 @@ $BCIO is live.
 
 The AI agent terminal for stocks and crypto is open.
 
-CA: [CA]
+CA: 0x3305761Ad2530277fD26D3A4f1B088865f7c86b0
 bcio.trade
 
 post/02-the-board.png
@@ -175,7 +175,7 @@ Site: bcio.trade
 Terminal: bcio.trade/terminal
 CLI and MCP: npx bcio-agent
 GitHub: github.com/bcioagents/bcio-agent
-CA: [CA]
+CA: 0x3305761Ad2530277fD26D3A4f1B088865f7c86b0
 
 
 AFTER LAUNCH · video
@@ -239,15 +239,61 @@ $20K market cap. DEX paid.
 
 Thank you for being early. BCIO is on the chart now.
 
-CA: [CA]
+CA: 0x3305761Ad2530277fD26D3A4f1B088865f7c86b0
 
 
 BURN
 ====
 
-video/bcio-burn.mp4  (setelah seluruh supply dev di-burn)
+video/bcio-burn.mp4  (dev burn, 16 Nov 2026, diverifikasi on-chain)
 100% of the $BCIO dev supply is burned.
 
-Sent to the dead address. The dev wallet holds zero. What's left is the terminal.
+At launch the dev wallet bought 8,018,516.99 $BCIO. 69 seconds later every one of those tokens went to the dead address. The dev wallet now holds zero.
 
-Burn tx: [link tx burn]
+Bought: 8,018,516.99 $BCIO (0.80% of supply) for 0.0145 ETH
+Burned: 100% of it
+Dev wallet: 0 $BCIO
+
+Burn tx: https://robinhoodchain.blockscout.com/tx/0xfd89aad664bd8176aeea91b4c65b9ee7ae5f70bff3f6498ab3117c6b401d9009
+Dev wallet: https://robinhoodchain.blockscout.com/address/0x80a1f7fd2d14BB65846BD4Fec3ca4a06c045C7A6
+
+CA: 0x3305761Ad2530277fD26D3A4f1B088865f7c86b0
+
+What's left is the terminal. bcio.trade
+
+Versi pendek (kalau mau satu tweet tanpa link panjang):
+Dev supply: 100% burned.
+
+8,018,516.99 $BCIO bought at launch, sent to the dead address 69 seconds later. Dev wallet holds zero.
+
+Proof: robinhoodchain.blockscout.com/tx/0xfd89aad664bd8176aeea91b4c65b9ee7ae5f70bff3f6498ab3117c6b401d9009
+
+
+BUYBACK AND BURN
+================
+
+video/bcio-buyback.mp4  +  post/21-buyback-and-burn.png  (buyback #1, 16 Nov 2026, diverifikasi on-chain)
+Buyback and burn #1.
+
+$20 of ETH bought 3,239,799 $BCIO on the Pons curve. Every token went straight to the dead address.
+
+Spent: $20 (0.0111 ETH)
+Bought and burned: 3,239,799 $BCIO
+Total in the dead address: 11,258,316 $BCIO (1.13% of supply)
+
+Buy: https://robinhoodchain.blockscout.com/tx/0xc22a0a0e97279dc4fa134c3c88dba20e8347a26790a13466ef359e1a7b480189
+Burn: https://robinhoodchain.blockscout.com/tx/0x6046fd9dec06c68183e775ab3917f39c9a335df05d9d528d48164b8ca776ef1b
+
+CA: 0x3305761Ad2530277fD26D3A4f1B088865f7c86b0
+bcio.trade
+
+Versi pendek:
+Bought back. Burned.
+
+$20 → 3,239,799 $BCIO → dead address. 11.26M $BCIO burned so far, 1.13% of supply.
+
+Burn tx: robinhoodchain.blockscout.com/tx/0x6046fd9dec06c68183e775ab3917f39c9a335df05d9d528d48164b8ca776ef1b
+
+Buyback berikutnya: buat konten otomatis dengan
+  cd konten-x/_src && node _tools/posts.mjs a21 && node _tools/render.mjs buyback
+(angka diambil live dari studio; nomor #N naik sendiri)

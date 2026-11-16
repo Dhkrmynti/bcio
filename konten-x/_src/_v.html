@@ -57,6 +57,12 @@ const A = (f) => `_assets/${f}`, H = (f) => `_hf/${f}`;
 const has = (f) => (D.hf || []).includes(f), pic = (f) => (has(f) ? H(f) : A("coin-stand.jpg"));
 const esc = (s) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 const TK = D.token?.ticker || "$BCIO", CA = D.token?.ca, SITE = D.site || "bcio.trade";
+
+// ---------- buyback & burn: angka live dari /studio (bcio.trade/api/token) ----------
+const BRN = D.burns || {}, LAST = (BRN.burns || []).find((b) => b.kind === "buyback") || null;
+const NBB = (BRN.burns || []).filter((b) => b.kind === "buyback").length;
+const tok = (v) => Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const DEADPCT = BRN.deadBalance ? (Number(BRN.deadBalance) / 1e9 * 100).toFixed(2) : null;
 const AS = D.watch?.assets || [], BY = Object.fromEntries(AS.map((a) => [a.symbol, a])), MK = D.watch?.market || {};
 const fmtP = (v) => v >= 1000 ? v.toLocaleString("en-US", { maximumFractionDigits: 0 }) : v >= 1 ? v.toFixed(2) : v.toFixed(4);
 const pct = (v) => (v >= 0 ? "+" : "") + v.toFixed(2) + "%", cls = (v) => (v >= 0 ? "up" : "down");
@@ -126,6 +132,12 @@ const SC = {
     if (D.token?.burned) show(add(`<div class="t" style="left:96px;top:720px"><p class="sub mono" style="font-family:var(--mono);color:var(--cream)">${Number(D.token.burned).toLocaleString("en-US")} ${TK}</p></div>`), 2.6);
     show(add(`<div class="t" style="left:96px;top:800px;width:1000px"><p class="sub">Sent to the dead address. The dev wallet holds zero. What's left is the terminal.</p></div>`), 3.4);
     endCard(11.4, "The proof is on chain. Link in the post."); finish(); },
+  buyback() { DUR = 15; photo(pic("hf07-fire.jpg"), 0, null, { from: 1.15, to: 1.02, x: -30 }); layer("shL"); embers(); brand();
+    show(add(`<div class="t" style="left:96px;top:230px"><p class="k">${TK} · buyback and burn #${NBB || 1}</p></div>`), 0.6);
+    show(add(`<div class="t" style="left:88px;top:280px"><h1 class="h-l">Bought back.<br>Burned.</h1></div>`), 1.2);
+    if (LAST) show(add(`<div class="t" style="left:96px;top:640px"><p class="sub mono" style="font-family:var(--mono);color:var(--cream)">$${Number(LAST.usd).toLocaleString("en-US")} of ETH  →  ${tok(LAST.burned)} ${TK}  →  dead address</p></div>`), 2.6);
+    if (BRN.deadBalance) show(add(`<div class="t" style="left:96px;top:730px;width:1300px"><p class="sub">Total in the dead address: ${tok(BRN.deadBalance)} ${TK}, ${DEADPCT}% of supply.</p></div>`), 4.0);
+    endCard(11.4, "Every burn is on chain. Link in the post."); finish(); },
   // ---------- after launch
   lore() { DUR = 34;
     photo(pic("hf01-closed.jpg"), 0, 5.6, { to: 1.1 }); photo(pic("hf02-twin.jpg"), 5.2, 11.0, { to: 1.12 }); photo(pic("hf05-bridge.jpg"), 10.6, 16.4, { to: 1.1, x: -40 });
