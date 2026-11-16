@@ -261,4 +261,4 @@ h1, h2 { margin: 0; }
 .xlink .xi { width: 14px; height: 14px; }
 .top .social { display: flex; gap: 8px; }
 @media (max-width: 760px) { .top .social { display: none; } }
-.xlink .xi.npm { width: 20px; height: 20px; }
+.xlink .xi.npm { width: 13px; height: 13px; }
