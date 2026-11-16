@@ -49,7 +49,7 @@ echo "  ok  semua tes lulus"
 if [ -f "$ENV_OUT" ] && grep -q '^AGENT_PRIVATE_KEY=' "$ENV_OUT"; then
   AGENT_KEY=$(sed -n 's/^AGENT_PRIVATE_KEY=//p' "$ENV_OUT")
 else
-  AGENT_KEY=$(cast wallet new --json | python3 -c "import json,sys; print(json.load(sys.stdin)[0]['private_key'])")
+  AGENT_KEY=$(cast wallet new --json | python3 -c "import json,sys; d=json.load(sys.stdin); d=d.get('data', d) if isinstance(d, dict) else d; print(d[0]['private_key'])")
   ( umask 077; printf 'AGENT_PRIVATE_KEY=%s\n' "$AGENT_KEY" > "$ENV_OUT" )
 fi
 AGENT=$(cast wallet address "$AGENT_KEY")
