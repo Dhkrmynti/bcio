@@ -316,6 +316,28 @@ $15 → 2,112,817 $BCIO → dead address. 13.37M $BCIO burned so far, 1.34% of s
 
 Burn tx: robinhoodchain.blockscout.com/tx/0xfbb096c1109af8642d96ef3b8d6d563dbe546fcb640c6cf686ef1dcf9efbde45
 
+video/bcio-buyback-3.mp4  +  post/23-buyback-and-burn-3.png  (buyback #3, 16 Nov 2026, diverifikasi on-chain)
+Buyback and burn #3.
+
+$10 of ETH bought 1,548,177 $BCIO on the Pons curve. Straight to the dead address.
+
+Spent: $10 (0.0055 ETH)
+Bought and burned: 1,548,177 $BCIO
+Total in the dead address: 14,919,311 $BCIO (1.49% of supply)
+
+Buy: https://robinhoodchain.blockscout.com/tx/0x1dcd9231bc8836c57f10a612a65534343d92700ed2762ee5f816bb777a2c2798
+Burn: https://robinhoodchain.blockscout.com/tx/0x9d8a5530c054eb330df6fade93d8998e7e6ab2ecacd6cd917c494691ee2efdb9
+
+CA: 0x3305761Ad2530277fD26D3A4f1B088865f7c86b0
+bcio.trade
+
+Versi pendek:
+Buyback #3 done.
+
+$10 → 1,548,177 $BCIO → dead address. 14.92M $BCIO burned so far, 1.49% of supply.
+
+Burn tx: robinhoodchain.blockscout.com/tx/0x9d8a5530c054eb330df6fade93d8998e7e6ab2ecacd6cd917c494691ee2efdb9
+
 Buyback berikutnya: buat konten otomatis dengan
   cd konten-x/_src && node _tools/posts.mjs a21 && node _tools/render.mjs buyback
 (angka diambil live dari studio; nomor #N naik sendiri)
