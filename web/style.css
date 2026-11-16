@@ -522,3 +522,21 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .soc .xi { width: 42%; height: 42%; }
 @media (max-width: 760px) { .social { display: none; } }
 .soc .xi.npm { width: 40%; height: 40%; }
+
+/* CA $BCIO (diisi dari /studio) */
+[data-ca] { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; }
+[data-ca][hidden] { display: none; }
+[data-ca] .ca-sym { font-weight: 700; letter-spacing: .02em; }
+[data-ca] .ca-addr { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 99px; background: #fff; box-shadow: inset 0 0 0 1px #8b8b96; cursor: pointer; color: inherit; font: inherit; }
+[data-ca] .ca-addr:hover { background: #23260f; color: #f5f5f0; }
+[data-ca] .ca-addr svg { width: 13px; height: 13px; }
+[data-ca] .ca-addr code { font: inherit; }
+[data-ca] .ca-buy { padding: 6px 14px; border-radius: 99px; background: #23260f; color: #f5f5f0; text-decoration: none; font-weight: 700; }
+[data-ca] .ca-buy:hover { opacity: .85; }
+[data-ca] .ca-burn { color: #a8701a; text-decoration: none; font-weight: 600; white-space: nowrap; }
+[data-ca] .ca-burn:hover { text-decoration: underline; }
+.ca-pill { position: absolute; left: calc(5.4 * var(--ux)); top: calc(50.2 * var(--uy)); z-index: 3; font-size: calc(.98 * var(--u)); }
+@media (max-width: 760px) { .ca-pill { order: 5; position: static; margin-top: 18px; font-size: 12px; flex-wrap: wrap; } }
+[data-ca] .ca-addr, [data-ca] .ca-buy, [data-ca] .ca-burn { white-space: nowrap; }
+[data-ca] .ca-burn { padding: 6px 12px; border-radius: 99px; background: rgba(255, 255, 255, .92); box-shadow: inset 0 0 0 1px rgba(201, 138, 30, .45); }
+.ca-pill .ca-sym { padding: 6px 2px; }

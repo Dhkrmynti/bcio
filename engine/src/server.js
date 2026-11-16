@@ -2,6 +2,7 @@
 //   npm start  ->  http://localhost:5191/terminal
 // API key Claude hanya ada di sini (dibaca dari .env), tidak pernah dikirim ke browser.
 import http from 'node:http';
+import crypto from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +12,7 @@ import { marketStatus } from './analytics.js';
 import { getSession, runAgent, Anthropic } from './agent.js';
 import { onchain, portfolio, policyOf, verifySignature, checkAddress } from './chain.js';
 import { getRules, saveRule, ruleMessage, activity, evaluate, startLoop, Rule } from './automation.js';
+import * as T from './burn.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const WEB = path.resolve(here, '../../web');
@@ -90,6 +92,37 @@ async function handleChat(req, res) {
 
 const runGate = new Map();
 
+// /studio: owner menyimpan CA dan menjalankan buyback-and-burn dengan tangan (mesin yang sama dengan OPTIC/WORMBRAIN).
+// Kunci studio: STUDIO_KEY di .env, atau dibuat sekali di data/burn/secrets.json (0600) di server.
+const ipOf = (req) => String(req.headers['x-real-ip'] || req.socket.remoteAddress || '');
+const digest = (x) => crypto.createHash('sha256').update(String(x)).digest();
+const misses = new Map();
+function studioOk(req) {
+  const ip = ipOf(req), now = Date.now(), m = (misses.get(ip) || []).filter((t) => now - t < 10 * 60_000);
+  if (m.length >= 10) return 'locked';
+  if (crypto.timingSafeEqual(digest(req.headers['x-studio-key'] || ''), digest(T.STUDIO_KEY))) return 'ok';
+  misses.set(ip, [...m, now]);
+  if (misses.size > 5000) misses.clear();
+  return 'bad';
+}
+async function studio(req, res, p) {
+  const a = studioOk(req);
+  if (a !== 'ok') return json(res, a === 'locked' ? 429 : 401, { error: a === 'locked' ? 'Too many wrong keys. Wait 10 minutes.' : 'Wrong studio key.' });
+  const k = `${req.method} ${p.slice('/api/studio'.length)}`;
+  try {
+    if (k === 'GET /status') return json(res, 200, await T.status());
+    if (k === 'POST /token') return json(res, 200, await T.saveToken(await readBody(req)));
+    if (k === 'POST /wallet') return json(res, 200, T.saveKey((await readBody(req)).privateKey || ''));
+    if (k === 'DELETE /wallet') return json(res, 200, T.removeKey());
+    if (k === 'POST /buyback') return json(res, 200, await T.buyback((await readBody(req)).usd));
+    if (k === 'POST /supply') return json(res, 200, await T.burnSupply((await readBody(req)).usd));
+    if (k === 'POST /burn-held') return json(res, 200, await T.burnHeld());
+    return json(res, 404, { error: 'Not found.' });
+  } catch (err) {
+    return json(res, 400, { error: err.message });
+  }
+}
+
 // Aturan otomatis hanya bisa diubah pemilik wallet: pesan harus ditandatangani wallet itu.
 async function handleRule(req, res) {
   let body;
@@ -129,6 +162,8 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/matrix' && req.method === 'GET') return json(res, 200, await correlationMatrix());
     if (url.pathname === '/api/chat' && req.method === 'POST') return handleChat(req, res);
     if (url.pathname === '/api/chain' && req.method === 'GET') return json(res, 200, onchain);
+    if (url.pathname === '/api/token' && req.method === 'GET') return json(res, 200, await T.publicView());
+    if (url.pathname.startsWith('/api/studio/')) return studio(req, res, url.pathname);
     if (url.pathname === '/api/portfolio' && req.method === 'GET') {
       const a = url.searchParams.get('address');
       return json(res, 200, await portfolio(a));

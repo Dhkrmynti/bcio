@@ -28,6 +28,11 @@ server {
         proxy_buffering off;              # jawaban agent di-stream (SSE)
         proxy_read_timeout 300s;
     }
+    location /api/studio/ {               # buyback menunggu dua transaksi: beri waktu lebih
+        limit_req zone=bcio_api burst=40 nodelay;
+        proxy_pass http://127.0.0.1:5860;
+        proxy_read_timeout 600s;
+    }
     location /api/ {
         limit_req zone=bcio_api burst=40 nodelay;
         proxy_pass http://127.0.0.1:5860;
