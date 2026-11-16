@@ -259,3 +259,6 @@ h1, h2 { margin: 0; }
 .xlink { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: var(--ink); box-shadow: inset 0 0 0 1px #8b8b96; background: #f7f7fa; flex: none; }
 .xlink:hover { background: var(--ink); color: #f7f7fa; }
 .xlink .xi { width: 14px; height: 14px; }
+.top .social { display: flex; gap: 8px; }
+@media (max-width: 760px) { .top .social { display: none; } }
+.xlink .xi.npm { width: 20px; height: 20px; }
