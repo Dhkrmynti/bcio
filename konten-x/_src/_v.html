@@ -166,7 +166,7 @@ const SC = {
     photo(pic("hf06-shield.jpg"), 7.0, null, { to: 1.12 }); const sh = layer("shL"); anims.push(sh.animate([{ opacity: 0 }, { opacity: 1 }], { delay: 7000, duration: 1000, fill: "both" }));
     show(add(`<div class="t" style="left:96px;top:220px"><p class="k">Weekend Shield · a rule you sign</p></div>`), 7.8, 16.6);
     show(add(`<div class="t" style="left:90px;top:270px;width:1100px"><h1 class="h-s">If BTC, ETH or SOL move past 5% while Wall Street is closed</h1></div>`), 8.4, 16.6);
-    show(add(`<div class="t" style="left:96px;top:540px"><p class="sub" style="color:var(--goldfill);font-size:42px">→ sell 50% of each stock token to USDC</p></div>`), 10.0, 16.6);
+    show(add(`<div class="t" style="left:96px;top:540px"><p class="sub" style="color:var(--goldfill);font-size:42px">→ sell 50% of each stock token to USDG</p></div>`), 10.0, 16.6);
     const cr = ["BTC", "ETH", "SOL"].map((s) => BY[s]).filter(Boolean);
     show(add(`<div class="t" style="left:96px;top:680px">${cr.map((a) => `<span class="chip">${a.symbol} <span style="color:${a.change24h >= 0 ? "#8fd6a1" : "#ff9b85"}">${pct(a.change24h)}</span></span>`).join("")}</div>`), 11.4, 16.6);
     show(add(`<div class="t" style="left:96px;top:800px;width:1100px"><p class="sub" style="font-size:30px">24h now. The agent checks every minute, inside the limits you set on chain. Revoke anytime.</p></div>`), 12.6, 16.6);
@@ -174,8 +174,8 @@ const SC = {
   basket() { DUR = 18; root.classList.add("light"); brand(0.2, 14.4);
     show(add(`<div class="t" style="left:96px;top:210px;width:640px"><h1 class="h-m">Ask for<br>a basket.</h1></div>`), 0.3, 14.4);
     const b = show(add(`<div class="bub t" style="right:120px;top:200px;width:880px"></div>`), 0.9, 14.4, { rise: 16 });
-    typeText(b, "Split 1,000 USDC from Solana: 50% TSLA, 50% SOL.", 1.2, 26);
-    const c = show(add(`<div class="card t" style="right:120px;top:400px;width:880px;padding:40px 46px"><p class="k">Basket · you sign</p><div style="margin-top:18px"><div class="row"><span>TSLA</span><b>50% · 500 USDC</b></div><div class="row"><span>SOL</span><b>50% · 500 USDC</b></div></div><div style="margin-top:30px"><span class="pill" id="ap">Approve basket</span></div></div>`), 4.2, 14.4, { rise: 30 });
+    typeText(b, "Split 1,000 USDG: 50% TSLA, 50% NVDA.", 1.2, 26);
+    const c = show(add(`<div class="card t" style="right:120px;top:400px;width:880px;padding:40px 46px"><p class="k">Basket · you sign</p><div style="margin-top:18px"><div class="row"><span>TSLA</span><b>50% · 500 USDG</b></div><div class="row"><span>NVDA</span><b>50% · 500 USDG</b></div></div><div style="margin-top:30px"><span class="pill" id="ap">Approve basket</span></div></div>`), 4.2, 14.4, { rise: 30 });
     const ap = c.querySelector("#ap"); anims.push(ap.animate([{ transform: "scale(1)" }, { transform: "scale(.94)" }, { transform: "scale(1)" }], { delay: 7600, duration: 500, fill: "both" }));
     anims.push(ap.animate([{ background: "#23260f" }, { background: "#2e7d43" }], { delay: 7900, duration: 400, fill: "forwards" }));
     anims.push({ seek: (t) => { ap.textContent = t > 8.0 ? "Signed in your wallet ✓" : "Approve basket"; } });
@@ -183,7 +183,7 @@ const SC = {
     lightEnd(14.8, "One basket. One signature."); finish(); },
   rebalance() { DUR = 18; root.classList.add("light"); brand(0.2, 14.4);
     show(add(`<div class="t" style="left:96px;top:220px;width:700px"><h1 class="h-m">Set the<br>weights.</h1></div>`), 0.3, 14.4);
-    const W = [["USDC", 40, 33], ["NVDA", 20, 27], ["QQQ", 15, 16], ["BTC", 15, 13], ["ETH", 10, 11]];
+    const W = [["USDG", 40, 33], ["NVDA", 20, 27], ["QQQ", 15, 16], ["TSLA", 15, 13], ["ETH", 10, 11]];
     const c = show(add(`<div class="card t" style="left:880px;top:220px;width:940px;padding:44px 50px"></div>`), 0.8, 14.4, { rise: 30 });
     W.forEach(([s, w, drift], i) => { const r = add(`<div style="display:grid;grid-template-columns:120px 1fr 90px;align-items:center;gap:24px;padding:16px 0"><b style="font:700 30px var(--sans)">${s}</b><div style="height:28px;border-radius:14px;background:rgba(35,38,15,.08)"><div class="f" style="height:100%;border-radius:14px;background:linear-gradient(90deg,#e2c58e,#8a6420);width:${w * 2}%"></div></div><span class="mono w" style="font:600 28px var(--mono);text-align:right">${w}%</span></div>`, c);
       const f = r.querySelector(".f"), lab = r.querySelector(".w");

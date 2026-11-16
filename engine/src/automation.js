@@ -1,19 +1,20 @@
 // Fase 2 & 3: aturan otomatis per wallet.
 //   shield    : Weekend / after-hours Volatility Shield. Saat Wall Street tutup dan kripto
-//               bergerak melewati ambang, agent menjual sebagian token saham ke tUSDC.
+//               bergerak melewati ambang, agent menjual sebagian token saham ke USDG.
 //   rebalance : jaga target bobot portofolio; rebalance saat penyimpangan melewati band.
 // Aturan disimpan di engine/data/rules.json dan hanya bisa dibuat dengan tanda tangan wallet.
-// Setiap trade lewat BcioDesk.executeFor, jadi batas policy on-chain tetap berlaku.
+// Setiap trade lewat BcioAgent.executeFor (Uniswap, Robinhood Chain mainnet), jadi batas policy
+// on-chain milik user (token, per trade, per hari, expiry, deviasi harga Chainlink) tetap berlaku.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { getMarkets } from './market.js';
 import { marketStatus } from './analytics.js';
-import { onchain, pushPrices, portfolio, policyOf, agentSwap, toUnits, checkAddress, TRADABLE, STOCKS, txUrl } from './chain.js';
+import { onchain, portfolio, policyOf, agentSwap, toUnits, checkAddress, requireAutomation, TRADABLE, STOCKS, USD, txUrl } from './chain.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const DATA = path.resolve(here, '../data');
+const DATA = process.env.BCIO_DATA_DIR || path.resolve(here, '../data');
 const RULES = path.join(DATA, 'rules.json');
 const ACTIVITY = path.join(DATA, 'activity.json');
 
@@ -24,11 +25,11 @@ const writeJson = (f, v) => { fs.mkdirSync(DATA, { recursive: true }); fs.writeF
 export const ShieldRule = z.object({
   type: z.literal('shield'),
   threshold_pct: z.number().min(2).max(30).describe('24h move in BTC/ETH/SOL that triggers the shield'),
-  hedge_pct: z.number().min(5).max(100).describe('Percent of each stock token position to sell to tUSDC'),
+  hedge_pct: z.number().min(5).max(100).describe('Percent of each stock token position to sell to USDG'),
   direction: z.enum(['down', 'any']).describe('Trigger on drops only, or on moves either way'),
   cooldown_h: z.number().min(1).max(168).describe('Hours before the shield can fire again'),
 });
-export const Targets = z.partialRecord(z.enum(TRADABLE), z.number().min(0).max(100)).describe('Target weights in percent (USDC, NVDA, TSLA, QQQ, BTC, ETH, SOL), must sum to 100');
+export const Targets = z.partialRecord(z.enum(TRADABLE), z.number().min(0).max(100)).describe(`Target weights in percent (${TRADABLE.join(', ')}), must sum to 100`);
 export const RebalanceRule = z.object({
   type: z.literal('rebalance'),
   targets: Targets,
@@ -86,15 +87,21 @@ function explainRevert(err) {
   const rev = err.walk?.((e) => e?.name === 'ContractFunctionRevertedError');
   const name = rev?.data?.errorName;
   const args = rev?.data?.args || [];
-  const usd = (v) => `$${(Number(v) / 1e8).toFixed(0)}`;
+  const usd = (v) => `$${(Number(v) / 1e6).toFixed(0)}`;
   switch (name) {
     case 'OverDayLimit': return `on-chain daily limit reached (${usd(args[0])} > ${usd(args[1])})`;
     case 'OverTradeLimit': return `on-chain per-trade limit (${usd(args[0])} > ${usd(args[1])})`;
     case 'PolicyExpired': return 'agent permission expired';
     case 'NoPolicy': return 'no agent permission';
-    case 'StalePrice': return 'oracle price is stale';
-    case 'Slippage': return 'price moved past the 1% slippage guard';
-    default: return name || (err.shortMessage || err.message).split('\n')[0];
+    case 'StalePrice': return 'Chainlink price is stale (feed paused), trade skipped';
+    case 'TokenNotAllowed': return 'token is not in the agent permission';
+    case 'TransferFailed': return 'token approval to the BCIO agent contract is missing or too low';
+    case 'NotListed': return 'token is not listed on the BCIO agent contract';
+    default: {
+      const msg = (err.shortMessage || err.message || '').split('\n')[0];
+      if (/Too little received/i.test(msg)) return 'pool price is outside your allowed deviation from Chainlink, trade skipped';
+      return name || msg;
+    }
   }
 }
 
@@ -105,21 +112,21 @@ async function runShield(address, rule, m, status, pol, { force }) {
   if (!force && sinceH(rule.last_run) < rule.cooldown_h) return { skipped: `cooldown (${rule.cooldown_h}h)` };
   const moves = m.assets.filter((a) => ['BTC', 'ETH', 'SOL'].includes(a.symbol)).map((a) => ({ symbol: a.symbol, change24h: a.change24h }));
   const hit = moves.filter((x) => (rule.direction === 'down' ? x.change24h <= -rule.threshold_pct : Math.abs(x.change24h) >= rule.threshold_pct));
-  if (!hit.length) return { skipped: `no crypto move past ${rule.threshold_pct}%` };
-  const pf = await portfolio(address, m);
+  if (!hit.length && !force) return { skipped: `no crypto move past ${rule.threshold_pct}%` }; // force: test run as if triggered
+  const pf = await portfolio(address);
   const trades = [];
-  for (const p of pf.positions.filter((x) => STOCKS.includes(x.symbol) && x.value > 1)) {
+  for (const p of pf.positions.filter((x) => STOCKS.includes(x.symbol) && pol.tokens.includes(x.symbol) && x.value > 1)) {
     let amt = (p.amount * rule.hedge_pct) / 100;
     if (amt * p.price > pol.max_trade_usd) amt = (pol.max_trade_usd * 0.995) / p.price; // policy per-trade cap
-    await trade(address, p.symbol, 'USDC', amt, trades);
+    await trade(address, p.symbol, USD, amt, trades);
   }
-  const why = `${hit.map((h) => `${h.symbol} ${h.change24h.toFixed(1)}%`).join(', ')} in 24h while Wall Street is ${status.weekend ? 'out for the weekend' : status.session}`;
+  const why = !hit.length ? "forced test run" : `${hit.map((h) => `${h.symbol} ${h.change24h.toFixed(1)}%`).join(', ')} in 24h while Wall Street is ${status.weekend ? 'out for the weekend' : status.session}`;
   return { fired: true, why, trades };
 }
 
 async function runRebalance(address, rule, m, pol, { force }) {
   if (!force && sinceH(rule.last_run) < rule.min_interval_h) return { skipped: `min interval (${rule.min_interval_h}h)` };
-  const pf = await portfolio(address, m);
+  const pf = await portfolio(address);
   if (pf.total_usd < 10) return { skipped: 'portfolio is empty' };
   const drift = TRADABLE.map((s) => {
     const p = pf.positions.find((x) => x.symbol === s);
@@ -129,14 +136,15 @@ async function runRebalance(address, rule, m, pol, { force }) {
   if (worst < rule.band_pct) return { skipped: `max drift ${worst.toFixed(1)} pts < band ${rule.band_pct}` };
   const trades = [];
   const cap = (usd) => Math.min(usd, pol.max_trade_usd * 0.995);
-  // jual yang kelebihan dulu, lalu beli yang kurang dengan tUSDC
-  for (const d of drift.filter((x) => x.symbol !== 'USDC' && x.weight > x.target)) {
+  // jual yang kelebihan dulu, lalu beli yang kurang dengan USDG (hanya token yang diizinkan user)
+  const ok = (s) => s !== USD && pol.tokens.includes(s);
+  for (const d of drift.filter((x) => ok(x.symbol) && x.weight > x.target)) {
     const usd = cap(((d.weight - d.target) / 100) * pf.total_usd);
-    if (usd > 1) await trade(address, d.symbol, 'USDC', usd / d.price, trades);
+    if (usd > 1) await trade(address, d.symbol, USD, usd / d.price, trades);
   }
-  for (const d of drift.filter((x) => x.symbol !== 'USDC' && x.weight < x.target)) {
+  for (const d of drift.filter((x) => ok(x.symbol) && x.weight < x.target)) {
     const usd = cap(((d.target - d.weight) / 100) * pf.total_usd);
-    if (usd > 1) await trade(address, 'USDC', d.symbol, usd, trades);
+    if (usd > 1) await trade(address, USD, d.symbol, usd, trades);
   }
   return { fired: true, why: `max drift ${worst.toFixed(1)} pts ≥ band ${rule.band_pct}`, trades };
 }
@@ -145,7 +153,7 @@ async function runRebalance(address, rule, m, pol, { force }) {
 // tidak boleh menjalankan aturan yang sama dua kali sebelum last_run tercatat.
 const locks = new Map();
 export function evaluate(address, opts = {}) {
-  if (!onchain.enabled) throw new Error(`On-chain execution is off: ${onchain.reason}`);
+  requireAutomation();
   const a = checkAddress(address);
   const prev = locks.get(a) || Promise.resolve();
   const run = prev.catch(() => {}).then(() => evaluateNow(a, opts));
@@ -157,7 +165,6 @@ export function evaluate(address, opts = {}) {
 async function evaluateNow(a, { force = false, only = null } = {}) {
   const rules = getRules(a); // dibaca setelah kunci didapat, jadi last_run sudah terbaru
   const m = await getMarkets();
-  await pushPrices(m).catch((e) => console.error('[oracle]', e.shortMessage || e.message));
   const status = marketStatus();
   const pol = await policyOf(a);
   const results = {};
@@ -179,13 +186,11 @@ async function evaluateNow(a, { force = false, only = null } = {}) {
 // loop: harga oracle + semua aturan aktif, tiap menit
 let running = false;
 export function startLoop(intervalMs = 60_000) {
-  if (!onchain.enabled) { console.log(`[automation] off: ${onchain.reason}`); return; }
+  if (!onchain.automation) { console.log(`[automation] off: ${onchain.automationReason}`); return; }
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      const m = await getMarkets();
-      await pushPrices(m).catch((e) => console.error('[oracle]', e.shortMessage || e.message));
       const all = readJson(RULES, {});
       for (const addr of Object.keys(all)) {
         if (!Object.values(all[addr]).some((r) => r.enabled)) continue;

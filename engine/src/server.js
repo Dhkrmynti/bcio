@@ -128,7 +128,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/chain' && req.method === 'GET') return json(res, 200, onchain);
     if (url.pathname === '/api/portfolio' && req.method === 'GET') {
       const a = url.searchParams.get('address');
-      return json(res, 200, await portfolio(a, await getMarkets()));
+      return json(res, 200, await portfolio(a));
     }
     if (url.pathname === '/api/automation' && req.method === 'GET') {
       const a = checkAddress(url.searchParams.get('address'));
@@ -160,7 +160,7 @@ const server = http.createServer(async (req, res) => {
     json(res, 405, { error: 'method not allowed' });
   } catch (err) {
     console.error('[server]', err.message);
-    if (/valid wallet address|On-chain execution is off/.test(err.message)) return json(res, 400, { error: err.message });
+    if (/valid wallet address|Automation is off/.test(err.message)) return json(res, 400, { error: err.message });
     json(res, err.status === 429 ? 503 : 500, { error: err.status === 429 ? 'Market data rate limited, retry shortly' : 'server error' });
   }
 });

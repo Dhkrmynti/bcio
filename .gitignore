@@ -11,3 +11,4 @@ contracts/cache/
 contracts/broadcast/
 engine/data/
 contracts/.testnet-wallet
+engine/.env.*

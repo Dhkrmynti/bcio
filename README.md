@@ -27,10 +27,10 @@ Buka http://localhost:5191/terminal.html. Butuh `ANTHROPIC_API_KEY` di `engine/.
 | `web/assets/coinball.glb` | Model + animasi yang dipakai di web |
 | `web/assets/coinball-poster.png` | Render Cycles untuk preview (tidak dipakai di halaman) |
 | `web/index.html`, `style.css`, `main.js` | Halaman. Bola koin dirender pakai three.js, hiasan putih (pegas, gelombang, cincin) dibuat langsung di three.js |
-| `web/sections.js` | Section di bawah hero, menjelaskan engine BCIO (terminal AI saham + kripto di Robinhood Chain): semua aset (koin berganti desain sendiri), korelasi NVDA vs BTC, kalender 24/7, demo agent + 3 MCP, basket, FAQ, dan CTA. Scroll biasa; animasi tiap section mulai saat section terlihat. Angka di halaman adalah data demo |
+| `web/sections.js` | Section di bawah hero, menjelaskan engine BCIO (terminal AI saham + kripto di Robinhood Chain): semua aset (koin berganti desain sendiri), korelasi NVDA vs BTC, kalender 24/7, demo agent + 3 MCP, basket, FAQ, dan CTA. Scroll biasa; animasi tiap section mulai saat section terlihat. Angka di section landing adalah ilustrasi; terminal memakai data live |
 | `web/terminal.html`, `terminal.css`, `terminal.js` | Terminal 3 panel: watchlist + matriks korelasi, chat agent, basket + weekend shield + status MCP. Butuh engine yang berjalan |
 | `engine/` | Engine: data pasar, korelasi & lag, MCP server, agent Claude, eksekusi on-chain, Weekend Shield & rebalancer otomatis |
-| `contracts/` | Kontrak Foundry: `BcioDesk` (oracle, swap, basket, policy agent) dan token uji. `deploy.sh local|testnet` |
+| `contracts/` | Kontrak Foundry: `BcioAgent` (izin agent non-custodial di Robinhood Chain mainnet, swap Uniswap v3, batas harga Chainlink). `deploy.sh` dijalankan pemilik |
 | `web/gold.js` | Bahan bersama: studio pantulan, tekstur goresan, detail medali koin (manik, garis radial, tulisan melingkar, guilloche; dibuat sebagai tekstur normal di browser), setelan material emas, loader model |
 
 ## Membuat ulang bola koin

@@ -2,7 +2,7 @@
 # Deploy BCIO (engine + web) ke VPS: rsync, npm install, pm2, nginx + Let's Encrypt.
 # Pemakaian (dari folder bcio/):  ./deploy/deploy.sh            (DOMAIN default bcio.trade)
 # engine/.env dan engine/data/ hanya ada di VPS dan tidak pernah ditimpa. Kalau .env belum ada di VPS,
-# file engine/.env lokal dikirim sekali (berisi key Claude + key keeper testnet).
+# file engine/.env lokal dikirim sekali (berisi key Claude).
 set -euo pipefail
 HOST=${HOST:-root@203.194.113.116}
 DOMAIN=${DOMAIN:-bcio.trade}
@@ -22,6 +22,19 @@ if ! $SSH "$HOST" "test -f $APP/engine/.env"; then
   $SSH "$HOST" "umask 077; cat > $APP/engine/.env" < engine/.env
   echo ".env dikirim ke VPS (chmod 600)"
 fi
+
+# Mainnet: key agent (dibuat contracts/deploy.sh) masuk ke .env di VPS; variabel testnet lama dibuang.
+# Key dikirim lewat stdin, tidak pernah muncul di layar atau argumen perintah.
+AGENT_LINE=$(grep -s '^AGENT_PRIVATE_KEY=' engine/.env.mainnet || true)
+printf '%s\n' "$AGENT_LINE" | $SSH "$HOST" "python3 -c '
+import os, sys
+p = \"$APP/engine/.env\"
+new = sys.stdin.read().strip()
+keep = [l for l in open(p).read().splitlines() if not l.startswith((\"CHAIN=\", \"KEEPER_PRIVATE_KEY=\")) and not (new and l.startswith(\"AGENT_PRIVATE_KEY=\"))]
+if new: keep.append(new)
+open(p, \"w\").write(\"\\n\".join(keep) + \"\\n\"); os.chmod(p, 0o600)
+'"
+[ -n "$AGENT_LINE" ] && echo "key agent mainnet terpasang di VPS" || echo "belum ada key agent (jalankan contracts/deploy.sh): basket jalan, automation menunggu"
 
 $SSH "$HOST" "export LC_ALL=C.UTF-8; set -e
   cd $APP/engine && npm install --omit=dev --no-audit --no-fund >/dev/null

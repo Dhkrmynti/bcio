@@ -142,13 +142,13 @@
       <canvas class="stage3d" aria-hidden="true"></canvas>
       <p class="kicker"><svg class="burst" viewBox="-50 -50 100 100" aria-hidden="true"></svg>AI agent · MCP</p>
       <h2 class="agent-word" id="agent-h">ASK.<br>APPROVE.</h2>
-      <div class="term" role="img" aria-label="Demo: the user asks the agent to split 1,000 USDC into TSLA and SOL if Tesla beats earnings and Bitcoin holds support; three MCP servers check the data and the agent returns a basket to approve">
+      <div class="term" role="img" aria-label="Demo: the user asks the agent to split 1,000 USDG into TSLA and NVDA if Tesla beats earnings and Bitcoin holds support; three MCP servers check the data and the agent returns a basket to approve">
         <div class="term-bar"><i></i><i></i><i></i><span>bcio terminal</span><em>demo</em></div>
         <p class="term-prompt"><span class="caret">&gt;</span> <span class="typed"></span><span class="cursor"></span></p>
         <ul class="mcp">
           <li><span class="dot"></span>TradFi MCP<small>earnings · macro</small></li>
           <li><span class="dot"></span>Crypto MCP<small>BTC · altcoins · flow</small></li>
-          <li><span class="dot"></span>Execution MCP<small>route · bridge · swap</small></li>
+          <li><span class="dot"></span>Execution MCP<small>route · Uniswap · swap</small></li>
         </ul>
         <div class="signal">
           <b>Signal</b>
@@ -158,8 +158,8 @@
         </div>
         <div class="basket">
           <div class="leg"><span>TSLA</span><div class="bar"><i style="--w:50%"></i></div><em>50%</em></div>
-          <div class="leg"><span>SOL</span><div class="bar"><i style="--w:50%"></i></div><em>50%</em></div>
-          <p class="route">USDC · Solana → Robinhood Chain · 1 signature</p>
+          <div class="leg"><span>NVDA</span><div class="bar"><i style="--w:50%"></i></div><em>50%</em></div>
+          <p class="route">USDG · Uniswap on Robinhood Chain · 1 signature</p>
           <button class="approve" type="button" tabindex="-1">Approve basket</button>
         </div>
       </div>
@@ -187,15 +187,15 @@
       </details>
       <details>
         <summary>Does the agent hold my funds?</summary>
-        <p>No. You sign every basket in your own wallet. Automations (Weekend Shield, rebalancer) only run inside limits you set on-chain: max per trade, max per day and an expiry. You can revoke the agent at any time.</p>
+        <p>No. Your tokens stay in your own wallet and you sign every basket yourself. Automations (Weekend Shield, rebalancer) only run inside limits you set on-chain in the BCIO agent contract: which tokens, max per trade, max per day, max price gap from Chainlink and an expiry. Every trade goes back into your wallet. You can revoke the agent and remove approvals at any time.</p>
       </details>
       <details>
         <summary>Are stock tokens the same as shares?</summary>
-        <p>No. Stock tokens are tokenized exposure on Robinhood Chain, not shares. On the current testnet the terminal trades test tokens priced from live market data.</p>
+        <p>No. Robinhood stock tokens are tokenized exposure on Robinhood Chain, not shares. They are not offered to US persons and are restricted in some other countries, including the UK and Canada. Check that you are eligible before you trade.</p>
       </details>
       <details>
         <summary>Which network does it run on?</summary>
-        <p>Robinhood Chain testnet (chain id 46630). No real money is involved yet.</p>
+        <p>Robinhood Chain mainnet (chain id 4663). Baskets swap real stock tokens and ETH against USDG on Uniswap v3, priced by Chainlink. Gas is paid in ETH. Trades can lose money; nothing here is financial advice.</p>
       </details>
       <details>
         <summary>Is this financial advice?</summary>
@@ -219,7 +219,7 @@
     <footer class="foot">
       <span class="logo"><img src="assets/logo-128.png" alt="" width="64" height="64">BCIO</span>
       <nav aria-label="Footer"><a href="#sync">Engine</a><a href="#agent">Agent</a><a href="#faq">FAQ</a><a href="terminal.html">Terminal</a><a href="https://x.com/bcioagents" target="_blank" rel="noopener">X</a><a href="https://github.com/bcioagents/bcio-agent" target="_blank" rel="noopener">GitHub</a><a href="https://www.npmjs.com/package/bcio-agent" target="_blank" rel="noopener">npm</a></nav>
-      <span>Demo data. Not financial advice. &copy; 2026 BCIO</span>
+      <span>Not financial advice. Real tokens on Robinhood Chain. &copy; 2026 BCIO</span>
     </footer>
   </section>
 
@@ -246,6 +246,6 @@
     } }
   </script>
   <script type="module" src="main.js?v=28"></script>
-  <script type="module" src="sections.js?v=23"></script>
+  <script type="module" src="sections.js?v=24"></script>
 </body>
 </html>

@@ -6,7 +6,10 @@ import { z } from 'zod';
 import { ASSETS, SYMBOLS, bySymbol } from './assets.js';
 import { getMarkets, getHistory } from './market.js';
 import { logReturns, pearson, alignHourly, lagScan, volatility, marketStatus } from './analytics.js';
-import { onchain, portfolio, policyOf, TRADABLE } from './chain.js';
+import { onchain, portfolio, policyOf, TRADABLE, USD } from './chain.js';
+
+const LEGS = TRADABLE.filter((t) => t !== USD); // NVDA, TSLA, QQQ, ETH
+const JURISDICTION = 'Robinhood stock tokens are not offered to US persons and are restricted in some other countries (incl. UK, Canada); the user must check they are eligible.';
 import { ShieldRule, RebalanceRule, Targets, getRules, activity, evaluate } from './automation.js';
 
 const Address = z.string().optional().describe('Wallet address; omit to use the wallet connected in the terminal');
@@ -123,44 +126,43 @@ export const TOOLS = [
   {
     name: 'propose_basket',
     group: 'execution',
-    description: 'Build a cross-asset basket proposal (stock tokens + crypto) for the user to review. Prices each leg at the latest quote and lays out the route. It does NOT execute: the user approves and signs it with their own wallet in the right panel. On the BCIO testnet desk the tradable legs are NVDA, TSLA, QQQ, BTC, ETH, SOL against tUSDC.',
+    description: `Build a cross-asset basket proposal (stock tokens + crypto) for the user to review. Prices each leg at the latest quote and lays out the route. It does NOT execute: the user approves and signs it with their own wallet in the right panel, and it swaps REAL tokens on Robinhood Chain mainnet through Uniswap v3. Tradable legs: ${LEGS.join(', ')}, paid in USDG. BTC, SOL and the AI coins can be analysed but are not tradable on-chain here.`,
     schema: z.object({
-      amount_usdc: z.number().positive().max(10_000_000).describe('Total size in USDC'),
-      source_chain: z.enum(['robinhood', 'solana', 'base', 'ethereum', 'arbitrum']).optional().describe('Where the USDC is now (default robinhood)'),
+      amount_usdg: z.number().positive().max(1_000_000).describe('Total size in USDG (dollars)'),
+      source_chain: z.enum(['robinhood', 'solana', 'base', 'ethereum', 'arbitrum']).optional().describe('Where the dollars are now (default robinhood)'),
       legs: z.array(z.object({ symbol: Sym, weight_pct: z.number().positive().max(100) })).min(1).max(8),
       condition: z.string().max(300).optional().describe('Trigger condition in plain words, if any, e.g. "only if TSLA beats earnings and BTC holds 60k"'),
       rationale: z.string().max(600).optional().describe('One or two sentences on why this basket'),
     }),
-    async run({ amount_usdc, source_chain = 'robinhood', legs, condition, rationale }) {
+    async run({ amount_usdg, source_chain = 'robinhood', legs, condition, rationale }) {
       const total = legs.reduce((s, l) => s + l.weight_pct, 0);
       if (Math.abs(total - 100) > 0.5) throw new Error(`Weights must sum to 100 (got ${total})`);
       const m = await getMarkets();
       const priced = legs.map((l) => {
         const a = m.assets.find((x) => x.symbol === l.symbol.toUpperCase());
         if (!a || a.missing) throw new Error(`No quote for ${l.symbol}`);
-        const usd = (amount_usdc * l.weight_pct) / 100;
+        const usd = (amount_usdg * l.weight_pct) / 100;
         return {
           symbol: a.symbol, kind: a.kind, weight_pct: l.weight_pct, usd: round(usd, 2), price: a.price,
           est_units: round(usd / a.price, 6),
-          venue: onchain.enabled && TRADABLE.includes(a.symbol) ? `BCIO desk, ${onchain.chainName}` : 'not on the BCIO desk',
+          venue: LEGS.includes(a.symbol) ? `Uniswap v3, ${onchain.chainName}` : 'not tradable on-chain here',
         };
       });
       const route = [];
       if (source_chain !== 'robinhood') {
-        route.push(`Bridge ${amount_usdc} USDC ${source_chain} -> Robinhood Chain (not wired on testnet: the desk uses tUSDC from its faucet)`);
+        route.push(`Bring ${amount_usdg} dollars from ${source_chain} to Robinhood Chain as USDG first (bridge or Robinhood Wallet); BCIO does not bridge for you`);
       }
-      priced.forEach((p) => route.push(`Swap ${p.usd} USDC -> ${p.symbol} (${p.venue})`));
-      const untradable = priced.filter((p) => !TRADABLE.includes(p.symbol)).map((p) => p.symbol);
+      priced.forEach((p) => route.push(`Swap ${p.usd} USDG -> ${p.symbol} (${p.venue})`));
+      const untradable = priced.filter((p) => !LEGS.includes(p.symbol)).map((p) => p.symbol);
       return {
         id: `bkt_${Date.now().toString(36)}`,
         status: 'proposal',
-        execution: onchain.enabled
-          ? (untradable.length
-            ? `Not executable as-is: ${untradable.join(', ')} are not on the BCIO ${onchain.chainName} desk (tradable: ${TRADABLE.filter((t) => t !== 'USDC').join(', ')}).`
-            : `Ready: the user approves and signs it with their wallet in the right panel (${onchain.chainName}, test tokens).`)
-          : 'Execution is off on this server.',
-        executable: onchain.enabled && untradable.length === 0,
-        amount_usdc, source_chain, condition: condition || null, rationale: rationale || null,
+        execution: untradable.length
+          ? `Not executable as-is: ${untradable.join(', ')} are not tradable on-chain here (tradable: ${LEGS.join(', ')}).`
+          : `Ready: the user reviews and signs it with their own wallet in the right panel. Real tokens on ${onchain.chainName} mainnet, swapped on Uniswap v3.`,
+        executable: untradable.length === 0,
+        eligibility: JURISDICTION,
+        amount_usdg, source_chain, condition: condition || null, rationale: rationale || null,
         legs: priced, route, priced_at: m.asOf,
       };
     },
@@ -169,11 +171,10 @@ export const TOOLS = [
   {
     name: 'get_portfolio',
     group: 'execution',
-    description: 'On-chain holdings of a wallet on the BCIO testnet desk (tUSDC, tNVDA, tTSLA, tQQQ, tBTC, tETH, tSOL), valued at live prices, with weights.',
+    description: `On-chain holdings of a wallet on Robinhood Chain mainnet (${TRADABLE.join(', ')}; ETH means WETH), valued at Chainlink prices, with weights.`,
     schema: z.object({ address: Address }),
     async run({ address }, ctx) {
-      const m = await getMarkets();
-      return portfolio(address || ctx.address, m);
+      return portfolio(address || ctx.address);
     },
   },
   {
@@ -189,20 +190,21 @@ export const TOOLS = [
   {
     name: 'draft_shield_rule',
     group: 'execution',
-    description: 'Phase 2. Draft a Weekend / after-hours Volatility Shield rule: while Wall Street is closed, if BTC, ETH or SOL moves past threshold_pct in 24h, the agent sells hedge_pct of each stock token position (NVDA, TSLA, QQQ) to tUSDC. Only drafts it: the user activates it in the right panel by signing, and on-chain limits apply.',
+    description: 'Phase 2. Draft a Weekend / after-hours Volatility Shield rule: while Wall Street is closed, if BTC, ETH or SOL moves past threshold_pct in 24h, the agent sells hedge_pct of each stock token position (NVDA, TSLA, QQQ) to USDG on Uniswap, with REAL tokens on Robinhood Chain mainnet. Only drafts it: the user activates it in the right panel by granting an on-chain permission and signing, and the contract enforces the limits.',
     schema: ShieldRule.omit({ type: true }).extend({
       max_trade_usd: z.number().positive().max(1_000_000).describe('Suggested on-chain per-trade limit for the agent'),
       max_day_usd: z.number().positive().max(10_000_000).describe('Suggested on-chain daily limit'),
       days_valid: z.number().int().min(1).max(90).describe('Suggested permission length in days'),
+      max_deviation_pct: z.number().min(0.5).max(20).describe('Max price gap from Chainlink the agent may accept. Stock feeds pause on weekends, so a shield usually needs 3-8%'),
     }),
-    async run({ max_trade_usd, max_day_usd, days_valid, ...rule }) {
-      return { draft: { type: 'shield', ...rule }, policy: { max_trade_usd, max_day_usd, days_valid }, needs: 'User signature in the right panel to activate' };
+    async run({ max_trade_usd, max_day_usd, days_valid, max_deviation_pct, ...rule }) {
+      return { draft: { type: 'shield', ...rule }, policy: { max_trade_usd, max_day_usd, days_valid, max_deviation_pct, tokens: ['NVDA', 'TSLA', 'QQQ'] }, needs: 'User grants the on-chain permission and signs the rule in the right panel' };
     },
   },
   {
     name: 'draft_rebalance_rule',
     group: 'execution',
-    description: 'Phase 3. Draft an automatic rebalancer: target weights in percent across tUSDC, NVDA, TSLA, QQQ, BTC, ETH, SOL (sum 100). When any weight drifts more than band_pct points, the agent sells the overweight legs and buys the underweight ones. Only drafts it: the user activates it by signing, and on-chain limits apply.',
+    description: `Phase 3. Draft an automatic rebalancer: target weights in percent across ${TRADABLE.join(', ')} (sum 100). When any weight drifts more than band_pct points, the agent sells the overweight legs to USDG and buys the underweight ones, with REAL tokens on Robinhood Chain mainnet. Only drafts it: the user activates it by granting an on-chain permission and signing.`,
     schema: z.object({
       targets: Targets,
       band_pct: z.number().min(1).max(30),
@@ -210,10 +212,12 @@ export const TOOLS = [
       max_trade_usd: z.number().positive().max(1_000_000),
       max_day_usd: z.number().positive().max(10_000_000),
       days_valid: z.number().int().min(1).max(90),
+      max_deviation_pct: z.number().min(0.5).max(20).describe('Max price gap from Chainlink the agent may accept (1-3% is typical)'),
     }),
-    async run({ max_trade_usd, max_day_usd, days_valid, ...rule }) {
+    async run({ max_trade_usd, max_day_usd, days_valid, max_deviation_pct, ...rule }) {
       const draft = RebalanceRule.parse({ type: 'rebalance', ...rule });
-      return { draft, policy: { max_trade_usd, max_day_usd, days_valid }, needs: 'User signature in the right panel to activate' };
+      const tokens = Object.entries(draft.targets).filter(([k, v]) => k !== USD && v > 0).map(([k]) => k);
+      return { draft, policy: { max_trade_usd, max_day_usd, days_valid, max_deviation_pct, tokens }, needs: 'User grants the on-chain permission and signs the rule in the right panel' };
     },
   },
   {

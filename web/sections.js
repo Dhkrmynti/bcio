@@ -480,7 +480,7 @@ function initAlways() {
 function initAgent() {
   const section = document.getElementById('agent');
   const typed = section.querySelector('.typed');
-  const prompt = 'If TSLA beats earnings and BTC holds support, split my 1,000 USDC: 50% TSLA, 50% SOL';
+  const prompt = 'If TSLA beats earnings and BTC holds support, split my 1,000 USDG: 50% TSLA, 50% NVDA';
   const mcps = [...section.querySelectorAll('.mcp li')];
   const signal = section.querySelector('.signal'), basket = section.querySelector('.basket');
   let shown = 0;

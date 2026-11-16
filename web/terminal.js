@@ -1,5 +1,5 @@
 // BCIO terminal (browser). Data & agent berasal dari engine lokal (engine/src/server.js).
-import { W, API, initWallet, refreshAll, executeBasket, setDraft } from './wallet.js?v=3';
+import { W, API, initWallet, refreshAll, executeBasket, setDraft, eligibilityBox } from './wallet.js?v=5';
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -168,7 +168,7 @@ function argsLabel(name, input) {
   if (!input) return '';
   if (name === 'correlate') return `${input.a} ↔ ${input.b}${input.days ? ` · ${input.days}d` : ''}`;
   if (name === 'get_quotes') return input.symbols?.join(', ') || 'watchlist';
-  if (name === 'propose_basket') return `${input.amount_usdc} USDC · ${(input.legs || []).map((l) => `${l.weight_pct}% ${l.symbol}`).join(' / ')}`;
+  if (name === 'propose_basket') return `${input.amount_usdg} USDG · ${(input.legs || []).map((l) => `${l.weight_pct}% ${l.symbol}`).join(' / ')}`;
   if (name === 'weekend_shield') return `threshold ${input.threshold_pct ?? 5}%`;
   return '';
 }
@@ -202,16 +202,17 @@ function mcpBusy(group, on) {
 
 function renderBasket(b) {
   $('#basket').innerHTML = `
-    <div class="bk-amt">${Number(b.amount_usdc).toLocaleString('en-US')}<small>USDC · from ${esc(b.source_chain)}</small></div>
+    <div class="bk-amt">${Number(b.amount_usdg).toLocaleString('en-US')}<small>USDG · from ${esc(b.source_chain)}</small></div>
     ${b.condition ? `<p class="bk-cond"><b>If</b> ${esc(b.condition)}</p>` : ''}
     ${b.rationale ? `<p class="bk-cond">${esc(b.rationale)}</p>` : ''}
     <div class="legs">${b.legs.map((l) => `
       <div class="leg"><span>${esc(l.symbol)}</span><div class="bar"><i style="width:${l.weight_pct}%"></i></div><em>${l.weight_pct}%</em>
-      <small>${Number(l.usd).toLocaleString('en-US')} USDC ≈ ${l.est_units} ${esc(l.symbol)} @ ${fmtPx(l.price)}</small></div>`).join('')}
+      <small>${Number(l.usd).toLocaleString('en-US')} USDG ≈ ${l.est_units} ${esc(l.symbol)} @ ${fmtPx(l.price)}</small></div>`).join('')}
     </div>
     <ol class="route">${b.route.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
+    ${b.executable ? eligibilityBox() : ''}
     <button class="approve" type="button" id="approve" ${b.executable ? '' : 'disabled'}>Approve basket</button>
-    <p class="bk-note">${esc(b.executable ? (W.address ? 'You sign it in your wallet. Test tokens, no real value.' : 'Connect your wallet to approve. Test tokens, no real value.') : b.execution)}</p>`;
+    <p class="bk-note">${esc(b.executable ? `${W.address ? 'You sign it in your wallet' : 'Connect your wallet to approve'}. Real tokens on Robinhood Chain, swapped on Uniswap v3 with a 1% price guard. Gas is paid in ETH.` : b.execution)}</p>`;
   $('#approve').addEventListener('click', (e) => executeBasket(b, e.target));
 }
 

@@ -1,19 +1,30 @@
-// Wallet & eksekusi di terminal BCIO (browser). Semua transaksi ditandatangani wallet user
-// sendiri (MetaMask, Rabby, dll.). Server tidak pernah memegang key user.
-import { createWalletClient, createPublicClient, custom, http, parseAbi, parseUnits, defineChain } from 'https://esm.sh/viem@2.21.55';
+// Wallet & eksekusi di terminal BCIO (browser), Robinhood Chain MAINNET. Semua transaksi
+// ditandatangani wallet user sendiri (MetaMask, Rabby, dll.). Server tidak pernah memegang key user.
+//  - Basket: Uniswap v3 SwapRouter02.multicall, satu tanda tangan (plus approve USDG bila perlu).
+//  - Otomatis: izin terbatas ke agent lewat kontrak BcioAgent (setAgent + approve token).
+import { createWalletClient, createPublicClient, custom, http, parseAbi, parseUnits, defineChain, encodeFunctionData, maxUint256 } from 'https://esm.sh/viem@2.21.55';
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = (v, d = 2) => `$${Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })}`;
 const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
 
-const DESK_ABI = parseAbi([
-  'function faucet()',
-  'function quote(address tokenIn, address tokenOut, uint256 amountIn) view returns (uint256 out, uint256 valueUsd)',
-  'function swapBasket(address tokenIn, uint256 amountIn, address[] tokensOut, uint16[] weightsBps, uint256[] minOuts) returns (uint256[])',
-  'function setAgent(address agent, uint128 maxTradeUsd, uint128 maxDayUsd, uint64 expiry)',
+const ERC20 = parseAbi([
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function balanceOf(address) view returns (uint256)',
+]);
+const ROUTER = parseAbi([
+  'function exactInputSingle((address tokenIn,address tokenOut,uint24 fee,address recipient,uint256 amountIn,uint256 amountOutMinimum,uint160 sqrtPriceLimitX96)) payable returns (uint256)',
+  'function multicall(uint256 deadline, bytes[] data) payable returns (bytes[])',
+]);
+const QUOTER = parseAbi([
+  'function quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96) params) returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)',
+]);
+const AGENT = parseAbi([
+  'function setAgent(address agent, uint64 maxTradeUsd, uint64 maxDayUsd, uint64 expiry, uint16 maxDeviationBps, address[] allowTokens)',
   'function revokeAgent(address agent)',
-  'error FaucetCooldown(uint256 nextAt)', 'error StalePrice(address token)', 'error Slippage(uint256 out, uint256 minOut)', 'error BadWeights()',
+  'error BadPolicy()', 'error NotListed(address token)',
 ]);
 
 export const W = { cfg: null, chain: null, pub: null, wallet: null, address: null, draft: null, portfolio: null };
@@ -26,22 +37,19 @@ export function toast(text, kind = 'info') {
   toast.h = setTimeout(() => { t.className = 'toast'; }, kind === 'error' ? 7000 : 4000);
 }
 
-function txLink(hash) {
-  if (!hash) return '';
-  return W.cfg?.explorer ? `<a href="${esc(W.cfg.explorer)}/tx/${esc(hash)}" target="_blank" rel="noopener">${esc(short(hash))}</a>` : `<code>${esc(short(hash))}</code>`;
-}
+const txLink = (hash) => (hash ? `<a href="${esc(W.cfg.explorer)}/tx/${esc(hash)}" target="_blank" rel="noopener">${esc(short(hash))}</a>` : '');
 
 function errText(err) {
   const rev = err?.walk?.((e) => e?.name === 'ContractFunctionRevertedError');
-  if (rev?.data?.errorName === 'FaucetCooldown') return 'Faucet is once a day. Try again tomorrow.';
-  if (rev?.data?.errorName === 'StalePrice') return 'Oracle price is stale. Wait a minute for the engine to refresh it.';
+  const msg = err?.shortMessage || err?.message || String(err);
+  if (/Too little received/i.test(msg)) return 'Price moved more than 1% before your transaction landed. Nothing was swapped; try again.';
+  if (/insufficient funds/i.test(msg)) return 'Not enough ETH on Robinhood Chain for gas.';
   if (rev?.data?.errorName) return rev.data.errorName;
-  if (err?.code === 4001 || /rejected|denied/i.test(err?.message || '')) return 'You cancelled it in your wallet.';
-  return (err?.shortMessage || err?.message || String(err)).split('\n')[0];
+  if (err?.code === 4001 || /rejected|denied/i.test(msg)) return 'You cancelled it in your wallet.';
+  return msg.split('\n')[0];
 }
 
-// halaman dilayani engine (lokal :5191, produksi bcio.trade) → API di origin yang sama;
-// hanya server statis dev (:5190) yang memanggil engine lokal
+// halaman dilayani engine (produksi bcio.trade) → API di origin yang sama; server statis dev (:5190) → engine lokal
 export const API = location.port === '5190' ? 'http://127.0.0.1:5191' : '';
 
 async function api(path, body) {
@@ -51,13 +59,34 @@ async function api(path, body) {
   return j;
 }
 
-async function send(functionName, args) {
-  const hash = await W.wallet.writeContract({ address: W.cfg.desk, abi: DESK_ABI, functionName, args, account: W.address, chain: W.chain });
-  toast('Transaction sent, waiting for the block…');
+async function write(address, abi, functionName, args, label) {
+  const hash = await W.wallet.writeContract({ address, abi, functionName, args, account: W.address, chain: W.chain });
+  toast(`${label || 'Transaction'} sent, waiting for the block…`);
   const rc = await W.pub.waitForTransactionReceipt({ hash });
   if (rc.status !== 'success') throw new Error('Transaction reverted');
   return hash;
 }
+
+const tok = (s) => W.cfg.tokens[s];
+const allowance = (s, spender) => W.pub.readContract({ address: tok(s).address, abi: ERC20, functionName: 'allowance', args: [W.address, spender] });
+const balanceOf = (s) => W.pub.readContract({ address: tok(s).address, abi: ERC20, functionName: 'balanceOf', args: [W.address] });
+
+// ---------------------------------------------------------------- kelayakan (stock tokens)
+const ELIG_KEY = 'bcio-eligible-v1';
+const eligible = () => { try { return localStorage.getItem(ELIG_KEY) === '1'; } catch { return false; } };
+function eligibilityBox() {
+  if (eligible()) return '';
+  return `<label class="elig"><input type="checkbox" id="elig"> I am not a US person and not in a country where Robinhood stock tokens are restricted (incl. UK and Canada). I understand these are real tokens, not shares, and that trades can lose money.</label>`;
+}
+function requireEligible() {
+  if (eligible()) return true;
+  const box = $('#elig');
+  if (box?.checked) { try { localStorage.setItem(ELIG_KEY, '1'); } catch { /* private mode */ } return true; }
+  toast('Please confirm the eligibility box first.', 'error');
+  box?.closest('.elig')?.classList.add('flash');
+  return false;
+}
+export { eligibilityBox };
 
 // ---------------------------------------------------------------- connect
 export async function initWallet(onChange) {
@@ -73,10 +102,10 @@ export async function initWallet(onChange) {
   W.chain = defineChain({
     id: W.cfg.chainId, name: W.cfg.chainName, nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     rpcUrls: { default: { http: [W.cfg.rpc] } },
-    ...(W.cfg.explorer ? { blockExplorers: { default: { name: 'Explorer', url: W.cfg.explorer } } } : {}),
+    blockExplorers: { default: { name: 'Blockscout', url: W.cfg.explorer } },
   });
   W.pub = createPublicClient({ chain: W.chain, transport: http(W.cfg.rpc) });
-  $('#net').textContent = `${W.cfg.chainName} · test tokens`;
+  $('#net').textContent = `${W.cfg.chainName} · mainnet`;
   btn.addEventListener('click', () => (W.address ? null : connect(onChange)));
   window.ethereum?.on?.('accountsChanged', (a) => { W.address = a[0] || null; paintButton(); onChange(); });
 }
@@ -88,7 +117,7 @@ function paintButton() {
 }
 
 async function connect(onChange) {
-  if (!window.ethereum) { toast('No wallet found. Install MetaMask or Rabby, then reload.', 'error'); return; }
+  if (!window.ethereum) { toast('No wallet found. Install MetaMask, Rabby or Robinhood Wallet, then reload.', 'error'); return; }
   try {
     const [a] = await window.ethereum.request({ method: 'eth_requestAccounts' });
     const hex = '0x' + W.cfg.chainId.toString(16);
@@ -98,7 +127,7 @@ async function connect(onChange) {
       if (e.code !== 4902) throw e;
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
-        params: [{ chainId: hex, chainName: W.cfg.chainName, nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: [W.cfg.rpc], ...(W.cfg.explorer ? { blockExplorerUrls: [W.cfg.explorer] } : {}) }],
+        params: [{ chainId: hex, chainName: W.cfg.chainName, nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: [W.cfg.rpc], blockExplorerUrls: [W.cfg.explorer] }],
       });
     }
     W.wallet = createWalletClient({ chain: W.chain, transport: custom(window.ethereum) });
@@ -120,55 +149,66 @@ export async function refreshPortfolio() {
     W.portfolio = p;
     const rows = p.positions.filter((x) => x.amount > 0);
     el.innerHTML = `
-      <div class="pf-total">${money(p.total_usd)}<small>${esc(short(p.address))}</small></div>
+      <div class="pf-total">${money(p.total_usd)}<small>${esc(short(p.address))} · Chainlink prices</small></div>
       ${rows.length ? `<div class="pf-rows">${rows.map((x) => `
-        <div><span>${esc(x.token)}</span><span>${x.amount < 1 ? x.amount.toFixed(5) : x.amount.toLocaleString('en-US', { maximumFractionDigits: 3 })}</span><span>${money(x.value)}</span><span class="w">${x.weight_pct.toFixed(1)}%</span></div>`).join('')}</div>` : '<p class="empty">Empty. Get test USDC to start.</p>'}
-      <button class="ghostbtn" type="button" id="faucet">Get 10,000 tUSDC (test)</button>`;
-    $('#faucet').addEventListener('click', async (e) => {
-      e.target.disabled = true;
-      try { await send('faucet', []); toast('10,000 tUSDC added', 'ok'); refreshPortfolio(); } catch (err) { toast(errText(err), 'error'); }
-      e.target.disabled = false;
-    });
+        <div><span>${esc(x.token)}</span><span>${x.amount < 1 ? x.amount.toFixed(5) : x.amount.toLocaleString('en-US', { maximumFractionDigits: 3 })}</span><span>${money(x.value)}</span><span class="w">${x.weight_pct.toFixed(1)}%</span></div>`).join('')}</div>`
+        : `<p class="empty">No USDG, stock tokens or WETH on Robinhood Chain in this wallet yet. Fund it with USDG (Robinhood Wallet or a bridge) and a little ETH for gas.</p>`}
+      <a class="ghostbtn" href="${esc(W.cfg.explorer)}/address/${esc(p.address)}" target="_blank" rel="noopener">View on explorer</a>`;
   } catch (err) {
     el.innerHTML = `<p class="empty">${esc(err.message)}</p>`;
   }
 }
 
-// ---------------------------------------------------------------- basket
+// ---------------------------------------------------------------- basket (Uniswap, satu tanda tangan)
 export async function executeBasket(b, btn) {
   if (!W.address) { toast('Connect your wallet first', 'error'); return; }
+  if (!requireEligible()) return;
   btn.disabled = true;
+  const reset = () => { btn.disabled = false; btn.textContent = 'Approve basket'; };
   try {
-    const amount = parseUnits(String(b.amount_usdc), 6);
-    const usdc = W.cfg.tokens.USDC;
-    const legs = b.legs.map((l) => ({ ...l, token: W.cfg.tokens[l.symbol] }));
-    let bps = legs.map((l) => Math.round(l.weight_pct * 100));
-    bps[bps.length - 1] += 10_000 - bps.reduce((s, v) => s + v, 0);
+    const usd = W.cfg.usd;
+    const amount = parseUnits(String(b.amount_usdg), tok(usd).decimals);
+    if ((await balanceOf(usd)) < amount) { toast(`Not enough ${usd} in this wallet for ${b.amount_usdg}.`, 'error'); reset(); return; }
+    // bagi per bobot; kaki terakhir mengambil sisa pembulatan
     let spent = 0n;
-    const minOuts = [];
-    for (let i = 0; i < legs.length; i++) {
-      const part = i === legs.length - 1 ? amount - spent : (amount * BigInt(bps[i])) / 10_000n;
+    const legs = b.legs.map((l, i) => {
+      const part = i === b.legs.length - 1 ? amount - spent : (amount * BigInt(Math.round(l.weight_pct * 100))) / 10_000n;
       spent += part;
-      const [out] = await W.pub.readContract({ address: W.cfg.desk, abi: DESK_ABI, functionName: 'quote', args: [usdc, legs[i].token, part] });
-      minOuts.push((out * 99n) / 100n);
+      return { ...l, amountIn: part, t: tok(l.symbol) };
+    });
+    btn.textContent = 'Quoting on Uniswap…';
+    for (const l of legs) {
+      const { result } = await W.pub.simulateContract({
+        address: W.cfg.quoter, abi: QUOTER, functionName: 'quoteExactInputSingle',
+        args: [{ tokenIn: tok(usd).address, tokenOut: l.t.address, amountIn: l.amountIn, fee: l.t.fee, sqrtPriceLimitX96: 0n }],
+      });
+      l.minOut = (result[0] * 99n) / 100n; // 1% slippage guard
     }
-    btn.textContent = 'Confirm in wallet…';
-    const hash = await send('swapBasket', [usdc, amount, legs.map((l) => l.token), bps, minOuts]);
+    if ((await allowance(usd, W.cfg.router)) < amount) {
+      btn.textContent = `1/2 Approve ${usd}…`;
+      await write(tok(usd).address, ERC20, 'approve', [W.cfg.router, amount], `${usd} approval`);
+    }
+    btn.textContent = 'Confirm basket in wallet…';
+    const calls = legs.map((l) => encodeFunctionData({
+      abi: ROUTER, functionName: 'exactInputSingle',
+      args: [{ tokenIn: tok(usd).address, tokenOut: l.t.address, fee: l.t.fee, recipient: W.address, amountIn: l.amountIn, amountOutMinimum: l.minOut, sqrtPriceLimitX96: 0n }],
+    }));
+    const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
+    const hash = await write(W.cfg.router, ROUTER, 'multicall', [deadline, calls], 'Basket');
     btn.textContent = 'Executed ✓';
-    btn.insertAdjacentHTML('afterend', `<p class="bk-note">Done · ${txLink(hash)}</p>`);
+    btn.insertAdjacentHTML('afterend', `<p class="bk-note">Done on Uniswap · ${txLink(hash)}</p>`);
     toast('Basket executed', 'ok');
     refreshPortfolio();
   } catch (err) {
     toast(errText(err), 'error');
-    btn.disabled = false;
-    btn.textContent = 'Approve basket';
+    reset();
   }
 }
 
 // ---------------------------------------------------------------- automation
 function ruleText(r) {
-  if (r.type === 'shield') return `When Wall Street is closed and BTC, ETH or SOL moves ${r.direction === 'down' ? 'down' : ''} ${r.threshold_pct}%+ in 24h, sell ${r.hedge_pct}% of each stock token to tUSDC. Cooldown ${r.cooldown_h}h.`;
-  return `Targets ${Object.entries(r.targets).map(([k, v]) => `${v}% ${k}`).join(' · ')}. Rebalance when a weight drifts ${r.band_pct}+ pts (at most every ${r.min_interval_h}h).`;
+  if (r.type === 'shield') return `When Wall Street is closed and BTC, ETH or SOL moves ${r.direction === 'down' ? 'down' : ''} ${r.threshold_pct}%+ in 24h, sell ${r.hedge_pct}% of each stock token to USDG on Uniswap. Cooldown ${r.cooldown_h}h.`;
+  return `Targets ${Object.entries(r.targets).map(([k, v]) => `${v}% ${k}`).join(' · ')}. Rebalance on Uniswap when a weight drifts ${r.band_pct}+ pts (at most every ${r.min_interval_h}h).`;
 }
 
 export function setDraft(result) {
@@ -185,12 +225,28 @@ async function signRule(rule, enabled) {
 
 async function activate(btn) {
   const { draft, policy } = W.draft;
+  if (!requireEligible()) return;
   btn.disabled = true;
   try {
-    btn.textContent = '1/2 Grant permission…';
+    const usd = W.cfg.usd;
+    // token yang bisa dijual agent (+ USDG untuk membeli saat rebalance)
+    const spend = [...new Set([...policy.tokens, ...(draft.type === 'rebalance' ? [usd] : [])])];
+    for (const s of spend) {
+      if ((await allowance(s, W.cfg.agentContract)) > 0n) continue;
+      btn.textContent = `Approve ${tok(s).token} for the agent contract…`;
+      await write(tok(s).address, ERC20, 'approve', [W.cfg.agentContract, maxUint256], `${tok(s).token} approval`);
+    }
+    btn.textContent = 'Grant permission…';
     const expiry = BigInt(Math.floor(Date.now() / 1000) + policy.days_valid * 86400);
-    await send('setAgent', [W.cfg.agent, BigInt(Math.round(policy.max_trade_usd * 1e8)), BigInt(Math.round(policy.max_day_usd * 1e8)), expiry]);
-    btn.textContent = '2/2 Sign rule…';
+    await write(W.cfg.agentContract, AGENT, 'setAgent', [
+      W.cfg.agent,
+      BigInt(Math.round(policy.max_trade_usd * 1e6)),
+      BigInt(Math.round(policy.max_day_usd * 1e6)),
+      expiry,
+      Math.round((policy.max_deviation_pct ?? 3) * 100),
+      policy.tokens.map((s) => tok(s).address),
+    ], 'Permission');
+    btn.textContent = 'Sign rule…';
     await signRule(draft, true);
     W.draft = null;
     toast('Automation is on', 'ok');
@@ -200,8 +256,24 @@ async function activate(btn) {
   refreshAutomation();
 }
 
+async function removeApprovals(btn) {
+  btn.disabled = true;
+  try {
+    for (const s of Object.keys(W.cfg.tokens)) {
+      if ((await allowance(s, W.cfg.agentContract)) === 0n) continue;
+      await write(tok(s).address, ERC20, 'approve', [W.cfg.agentContract, 0n], `${tok(s).token} approval removed`);
+    }
+    toast('All token approvals to the agent contract are now zero.', 'ok');
+  } catch (err) { toast(errText(err), 'error'); }
+  refreshAutomation();
+}
+
 export async function refreshAutomation() {
   const el = $('#auto');
+  if (W.cfg && !W.cfg.automation) {
+    el.innerHTML = `<p class="empty">Automatic trading is not live yet: ${esc(W.cfg.automationReason || 'agent contract not deployed')}. Baskets work now.</p>`;
+    return;
+  }
   if (!W.address) {
     if (W.draft) el.innerHTML = `<div class="draft"><b>${esc(W.draft.draft.type === 'shield' ? 'Weekend shield' : 'Rebalancer')} draft</b><p>${esc(ruleText(W.draft.draft))}</p><p class="empty">Connect your wallet to activate it.</p></div>`;
     return;
@@ -210,30 +282,34 @@ export async function refreshAutomation() {
     const a = await api(`/api/automation?address=${W.address}`);
     const p = a.policy;
     const rules = Object.entries(a.rules || {}).filter(([, r]) => r.enabled);
+    const approved = Object.entries(p.approvals || {}).filter(([, v]) => v).map(([k]) => k);
     let html = `
       <div class="perm ${p.active ? 'on' : ''}">
         <div><i></i><b>${p.active ? 'Agent permission active' : 'No agent permission'}</b></div>
-        ${p.active ? `<div class="perm-kv"><span>per trade <b>${money(p.max_trade_usd, 0)}</b></span><span>per day <b>${money(p.max_day_usd, 0)}</b></span><span>used today <b>${money(p.spent_today_usd, 0)}</b></span><span>until <b>${new Date(p.expires_at).toLocaleDateString()}</b></span></div>` : ''}
-        <small>Agent ${esc(short(p.agent))} can only swap between your own test tokens, within these limits. Enforced by the contract.</small>
+        ${p.active ? `<div class="perm-kv"><span>per trade <b>${money(p.max_trade_usd, 0)}</b></span><span>per day <b>${money(p.max_day_usd, 0)}</b></span><span>used today <b>${money(p.spent_today_usd, 0)}</b></span><span>max gap vs Chainlink <b>${p.max_deviation_pct}%</b></span><span>tokens <b>${esc(p.tokens.join(', '))}</b></span><span>until <b>${new Date(p.expires_at).toLocaleDateString()}</b></span></div>` : ''}
+        <small>Agent ${esc(short(p.agent))} can only swap your allowed tokens to and from USDG on Uniswap, back into your own wallet, within these limits. Enforced by the <a href="${esc(W.cfg.explorer)}/address/${esc(p.contract)}" target="_blank" rel="noopener">BCIO agent contract</a>. Real tokens.</small>
       </div>`;
     if (W.draft) {
+      const pol = W.draft.policy;
       html += `<div class="draft"><b>New: ${esc(W.draft.draft.type === 'shield' ? 'Weekend shield (phase 2)' : 'Rebalancer (phase 3)')}</b>
         <p>${esc(ruleText(W.draft.draft))}</p>
-        <p class="empty">Permission: ${money(W.draft.policy.max_trade_usd, 0)} per trade, ${money(W.draft.policy.max_day_usd, 0)} per day, ${W.draft.policy.days_valid} days.</p>
+        <p class="empty">Permission: ${money(pol.max_trade_usd, 0)} per trade, ${money(pol.max_day_usd, 0)} per day, max ${pol.max_deviation_pct ?? 3}% from Chainlink, tokens ${esc(pol.tokens.join(', '))}, ${pol.days_valid} days. Your wallet asks for a token approval per token, then the permission, then a free signature for the rule.</p>
+        ${eligibilityBox()}
         <div class="row"><button class="approve" type="button" id="activate">Activate</button><button class="ghostbtn" type="button" id="discard">Discard</button></div></div>`;
     }
     html += rules.length ? rules.map(([type, r]) => `
       <div class="rule"><div><b>${type === 'shield' ? 'Weekend shield' : 'Rebalancer'}</b><button class="link" type="button" data-off="${esc(type)}">turn off</button></div>
       <p>${esc(ruleText(r))}</p><small>last run: ${r.last_run ? new Date(r.last_run).toLocaleString() : 'never'}</small></div>`).join('') : '';
-    if (p.active || rules.length) {
-      html += `<div class="row"><button class="ghostbtn" type="button" id="runnow">Check rules now</button>${p.active ? '<button class="ghostbtn danger" type="button" id="revoke">Revoke agent</button>' : ''}</div>`;
+    if (p.active || rules.length || approved.length) {
+      html += `<div class="row">${p.active || rules.length ? '<button class="ghostbtn" type="button" id="runnow">Check rules now</button>' : ''}${p.active ? '<button class="ghostbtn danger" type="button" id="revoke">Revoke agent</button>' : ''}${approved.length ? `<button class="ghostbtn danger" type="button" id="unapprove" title="Approved: ${esc(approved.join(', '))}">Remove approvals</button>` : ''}</div>`;
     }
     el.innerHTML = html;
     $('#activate')?.addEventListener('click', (e) => activate(e.target));
     $('#discard')?.addEventListener('click', () => { W.draft = null; refreshAutomation(); });
+    $('#unapprove')?.addEventListener('click', (e) => removeApprovals(e.target));
     $('#revoke')?.addEventListener('click', async (e) => {
       e.target.disabled = true;
-      try { await send('revokeAgent', [W.cfg.agent]); toast('Agent revoked. It can no longer trade for you.', 'ok'); } catch (err) { toast(errText(err), 'error'); }
+      try { await write(W.cfg.agentContract, AGENT, 'revokeAgent', [W.cfg.agent], 'Revoke'); toast('Agent revoked. It can no longer trade for you.', 'ok'); } catch (err) { toast(errText(err), 'error'); }
       refreshAutomation();
     });
     $('#runnow')?.addEventListener('click', async (e) => {

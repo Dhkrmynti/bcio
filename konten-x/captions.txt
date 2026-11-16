@@ -95,12 +95,12 @@ Weekend Shield.
 
 Crypto dumps on a Saturday, Wall Street can't react. Your stock tokens can.
 
-Set a rule once: if BTC, ETH or SOL move past your threshold while Wall Street is closed, the agent hedges part of your stock tokens to USDC. Inside limits you sign on chain.
+Set a rule once: if BTC, ETH or SOL move past your threshold while Wall Street is closed, the agent hedges part of your stock tokens to USDG. Inside limits you sign on chain.
 
 post/08-baskets.png
 Ask for a basket.
 
-"Split 1,000 USDC: 50% TSLA, 50% SOL."
+"Split 1,000 USDG: 50% TSLA, 50% NVDA."
 
 The agent builds it. You review it. Your wallet signs it.
 
@@ -148,12 +148,12 @@ Two markets that touch, but don't copy each other. That link is what BCIO reads.
 post/16-data-not-advice.png
 Data, not advice.
 
-Correlations describe the past. Stock tokens are not shares. Testnet tokens are for testing. You decide, you sign.
+Correlations describe the past. Stock tokens are not shares, and not offered to US persons. You decide, you sign.
 
 post/17-the-desk-on-chain.png
-The desk is on Robinhood Chain.
+Live on Robinhood Chain.
 
-Test tokens priced at real market prices, a faucet, and the agent permission contract. Try every flow before real money.
+Real stock tokens and ETH, swapped against USDG on Uniswap, priced by Chainlink. The agent only trades inside limits you sign on chain.
 
 post/18-how-it-reads.png
 How BCIO reads the market:

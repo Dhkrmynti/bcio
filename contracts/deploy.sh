@@ -1,79 +1,96 @@
 #!/usr/bin/env bash
-# Deploy BCIO desk + test tokens and write engine/deployments/<chainId>.json
+# Deploy BcioAgent ke Robinhood Chain MAINNET (4663). DIJALANKAN SENDIRI OLEH PEMILIK.
 #
-#   ./deploy.sh local     # anvil di http://127.0.0.1:8545 (jalankan `anvil` dulu)
-#   ./deploy.sh testnet   # Robinhood Chain TESTNET (46630)
+#   cd contracts && ./deploy.sh
 #
-# Testnet: butuh wallet TESTING berisi sedikit ETH testnet (faucet.testnet.chain.robinhood.com).
-#   DEPLOYER_PRIVATE_KEY  wallet yang membayar gas deploy
-#   KEEPER_PRIVATE_KEY    wallet engine (update harga + agent). Boleh sama dengan deployer.
-# Jangan pernah memakai wallet yang menyimpan dana asli.
+# Yang terjadi:
+#  1. Cek RPC benar-benar chain 4663 dan semua token/feed/router yang dipakai ada di chain.
+#  2. Minta private key wallet DEPLOYER (diketik tersembunyi, tidak disimpan). Wallet ini membayar
+#     gas deploy dengan ETH asli di Robinhood Chain dan menjadi owner kontrak (hanya bisa
+#     mengatur daftar token, tidak bisa menyentuh dana user).
+#  3. Membuat key AGENT baru khusus server (kalau belum ada di engine/.env.mainnet). Key ini yang
+#     menjalankan trade otomatis, hanya dalam batas yang ditandatangani tiap user. Isi alamatnya
+#     dengan sedikit ETH untuk gas (mis. 0.005 ETH).
+#  4. Menulis engine/deployments/4663.json.
 set -euo pipefail
 cd "$(dirname "$0")"
 export PATH="$HOME/.foundry/bin:$PATH"
-NETWORK="${1:-local}"
-ENGINE_ENV="../engine/.env"
-
-if [ "$NETWORK" = "local" ]; then
-  RPC_URL="http://127.0.0.1:8545"
-  EXPLORER=""
-  # akun bawaan anvil (publik, hanya untuk chain lokal)
-  DEPLOYER_PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-  KEEPER_PRIVATE_KEY="0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
-  EXPECT=31337
-elif [ "$NETWORK" = "testnet" ]; then
-  RPC_URL="${TESTNET_RPC_URL:-https://rpc.testnet.chain.robinhood.com}"
-  EXPLORER="https://explorer.testnet.chain.robinhood.com"
-  EXPECT=46630
-  # wallet testing lokal (gitignored) kalau ada
-  if [ -z "${DEPLOYER_PRIVATE_KEY:-}" ] && [ -f .testnet-wallet ]; then
-    DEPLOYER_PRIVATE_KEY=$(sed -n 's/^DEPLOYER_PRIVATE_KEY=//p' .testnet-wallet)
-  fi
-  if [ -z "${DEPLOYER_PRIVATE_KEY:-}" ]; then read -r -s -p "Private key wallet TESTING untuk deploy: " DEPLOYER_PRIVATE_KEY; echo; fi
-  KEEPER_PRIVATE_KEY="${KEEPER_PRIVATE_KEY:-$DEPLOYER_PRIVATE_KEY}"
-else
-  echo "Pakai: ./deploy.sh local|testnet"; exit 1
-fi
+RPC_URL="${MAINNET_RPC_URL:-https://rpc.mainnet.chain.robinhood.com}"
+ENV_OUT="../engine/.env.mainnet"
 
 CHAIN_ID=$(cast chain-id --rpc-url "$RPC_URL") || { echo "Tidak bisa terhubung ke $RPC_URL"; exit 1; }
-[ "$CHAIN_ID" = "$EXPECT" ] || { echo "RPC ini chain $CHAIN_ID, bukan $EXPECT. Berhenti."; exit 1; }
+[ "$CHAIN_ID" = "4663" ] || { echo "RPC ini chain $CHAIN_ID, bukan 4663. Berhenti."; exit 1; }
 
-DEPLOYER=$(cast wallet address "$DEPLOYER_PRIVATE_KEY")
-KEEPER=$(cast wallet address "$KEEPER_PRIVATE_KEY")
-echo "Chain    : $CHAIN_ID"
-echo "Deployer : $DEPLOYER ($(cast balance "$DEPLOYER" --rpc-url "$RPC_URL" --ether) ETH)"
-echo "Keeper   : $KEEPER ($(cast balance "$KEEPER" --rpc-url "$RPC_URL" --ether) ETH)"
+echo "Memeriksa kontrak yang dipakai di chain…"
+check() { # alamat, fungsi, harapan
+  local got; got=$(cast call "$1" "$2" --rpc-url "$RPC_URL" 2>/dev/null | cast --to-ascii 2>/dev/null | tr -d '\0' | xargs || true)
+  [[ "$got" == *"$3"* ]] || { echo "  GAGAL: $1 $2 = '$got' (harusnya mengandung '$3')"; exit 1; }
+  echo "  ok  $3"
+}
+check 0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168 "symbol()" USDG
+check 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73 "symbol()" WETH
+check 0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC "symbol()" NVDA
+check 0x322F0929c4625eD5bAd873c95208D54E1c003b2d "symbol()" TSLA
+check 0xD5f3879160bc7c32ebb4dC785F8a4F505888de68 "symbol()" QQQ
+check 0x61B7e5650328764B076A108EFF5fa7282a1B9aD2 "description()" "USDG / USD"
+check 0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9 "description()" "ETH / USD"
+check 0x379EC4f7C378F34a1B47E4F3cbeBCbAC3E8E9F15 "description()" "NVDA / USD"
+check 0x4A1166a659A55625345e9515b32adECea5547C38 "description()" "TSLA / USD"
+check 0x80901d846d5D7B030F26B480776EE3b29374C2ae "description()" "QQQ / USD"
+[ "$(cast code 0xCaf681a66D020601342297493863E78C959E5cb2 --rpc-url "$RPC_URL" | wc -c)" -gt 100 ] || { echo "SwapRouter02 tidak ada"; exit 1; }
+echo "  ok  SwapRouter02"
 
-OUT=$(KEEPER="$KEEPER" forge script script/Deploy.s.sol --rpc-url "$RPC_URL" --private-key "$DEPLOYER_PRIVATE_KEY" --broadcast 2>&1) \
+echo
+echo "Uji kontrak di salinan (fork) mainnet dulu, tanpa transaksi sungguhan…"
+forge test --match-contract BcioAgentFork --fork-url "$RPC_URL" -q || { echo "Tes gagal. Berhenti."; exit 1; }
+echo "  ok  semua tes lulus"
+
+# key agent server (baru, khusus BCIO)
+if [ -f "$ENV_OUT" ] && grep -q '^AGENT_PRIVATE_KEY=' "$ENV_OUT"; then
+  AGENT_KEY=$(sed -n 's/^AGENT_PRIVATE_KEY=//p' "$ENV_OUT")
+else
+  AGENT_KEY=$(cast wallet new --json | python3 -c "import json,sys; print(json.load(sys.stdin)[0]['private_key'])")
+  ( umask 077; printf 'AGENT_PRIVATE_KEY=%s\n' "$AGENT_KEY" > "$ENV_OUT" )
+fi
+AGENT=$(cast wallet address "$AGENT_KEY")
+
+echo
+read -r -s -p "Private key wallet DEPLOYER (berisi sedikit ETH di Robinhood Chain): " DEPLOYER_KEY; echo
+DEPLOYER=$(cast wallet address "$DEPLOYER_KEY")
+BAL=$(cast balance "$DEPLOYER" --rpc-url "$RPC_URL" --ether)
+echo "Deployer : $DEPLOYER ($BAL ETH)"
+echo "Agent    : $AGENT ($(cast balance "$AGENT" --rpc-url "$RPC_URL" --ether) ETH)"
+read -r -p "Deploy BcioAgent ke MAINNET sekarang? ketik 'deploy' untuk lanjut: " OK
+[ "$OK" = "deploy" ] || { echo "Dibatalkan."; exit 1; }
+
+OUT=$(forge script script/DeployMainnet.s.sol --rpc-url "$RPC_URL" --private-key "$DEPLOYER_KEY" --broadcast --slow 2>&1) \
   || { echo "$OUT" | tail -20; exit 1; }
+unset DEPLOYER_KEY
+ADDR=$(echo "$OUT" | sed -n 's/.*OUT AGENT_CONTRACT \(0x[0-9a-fA-F]*\).*/\1/p')
+[ -n "$ADDR" ] || { echo "$OUT" | tail -20; exit 1; }
 
 mkdir -p ../engine/deployments
-echo "$OUT" | grep -E "OUT (DESK|TOKEN)" | python3 -c "
+python3 - "$ADDR" "$AGENT" "$DEPLOYER" "$RPC_URL" <<'PY'
 import json, sys, time
-d = {'chainId': $CHAIN_ID, 'rpc': '$RPC_URL', 'explorer': '$EXPLORER', 'keeper': '$KEEPER', 'tokens': {}, 'deployedAt': int(time.time())}
-for line in sys.stdin:
-    p = line.split()
-    if p[1] == 'DESK': d['desk'] = p[2]
-    else: d['tokens'][p[2]] = p[3]
-assert d.get('desk') and len(d['tokens']) == 7, d
-json.dump(d, open('../engine/deployments/$CHAIN_ID.json', 'w'), indent=2)
-print(json.dumps(d, indent=2))
-"
-
-# engine memakai key keeper ini untuk update harga & menjalankan aturan agent
-python3 - "$ENGINE_ENV" "$NETWORK" "$KEEPER_PRIVATE_KEY" <<'PY'
-import sys, os, re
-path, net, key = sys.argv[1:]
-lines = open(path).read().splitlines() if os.path.exists(path) else []
-want = {'CHAIN': net, 'KEEPER_PRIVATE_KEY': key}
-out, seen = [], set()
-for l in lines:
-    k = l.split('=', 1)[0]
-    if k in want: out.append(f'{k}={want[k]}'); seen.add(k)
-    else: out.append(l)
-for k, v in want.items():
-    if k not in seen: out.append(f'{k}={v}')
-open(path, 'w').write('\n'.join(out) + '\n')
-os.chmod(path, 0o600)
+addr, agent, owner, rpc = sys.argv[1:]
+d = {
+  "chainId": 4663, "name": "Robinhood Chain", "rpc": rpc, "explorer": "https://robinhoodchain.blockscout.com",
+  "agentContract": addr, "agent": agent, "owner": owner, "deployedAt": int(time.time()),
+  "router": "0xCaf681a66D020601342297493863E78C959E5cb2", "quoter": "0x33e885ed0ec9bf04ecfb19341582aadcb4c8a9e7",
+  "usd": "USDG",
+  "tokens": {
+    "USDG": {"address": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168", "decimals": 6, "feed": "0x61B7e5650328764B076A108EFF5fa7282a1B9aD2"},
+    "ETH":  {"address": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73", "decimals": 18, "feed": "0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9", "fee": 100, "token": "WETH"},
+    "NVDA": {"address": "0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC", "decimals": 18, "feed": "0x379EC4f7C378F34a1B47E4F3cbeBCbAC3E8E9F15", "fee": 500},
+    "TSLA": {"address": "0x322F0929c4625eD5bAd873c95208D54E1c003b2d", "decimals": 18, "feed": "0x4A1166a659A55625345e9515b32adECea5547C38", "fee": 3000},
+    "QQQ":  {"address": "0xD5f3879160bc7c32ebb4dC785F8a4F505888de68", "decimals": 18, "feed": "0x80901d846d5D7B030F26B480776EE3b29374C2ae", "fee": 500}
+  }
+}
+json.dump(d, open("../engine/deployments/4663.json", "w"), indent=2)
+print(json.dumps({k: d[k] for k in ("agentContract", "agent", "owner")}, indent=2))
 PY
-echo "Selesai. engine/.env diset ke CHAIN=$NETWORK. Restart engine: cd ../engine && npm start"
+echo
+echo "Selesai. Kontrak: https://robinhoodchain.blockscout.com/address/$ADDR"
+echo "Langkah berikutnya:"
+echo "  1. Kirim ~0.005 ETH (Robinhood Chain) ke alamat agent $AGENT untuk gas trade otomatis."
+echo "  2. Dari folder bcio/: ./deploy/deploy.sh  (mengirim deployment + key agent ke server, automation menyala)."

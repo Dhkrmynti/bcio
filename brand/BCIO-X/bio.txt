@@ -16,7 +16,7 @@ BCIO is live: an AI agent terminal that reads stock tokens and crypto as one mar
 - Does BTC follow NVDA? It finds the lag.
 - Wall Street closed and crypto dumping? Weekend Shield hedges your stock tokens.
 - Ask for a basket, approve it in your own wallet.
-Testnet on Robinhood Chain. Try it: bcio.trade
+Live on Robinhood Chain mainnet. Try it: bcio.trade
 Also in Claude: npx bcio-agent mcp
 
 Isi folder:
