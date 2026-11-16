@@ -32,8 +32,21 @@ server {
         proxy_pass http://127.0.0.1:5860;
         proxy_read_timeout 120s;
     }
+    # File statis langsung dari nginx: terkompresi dan di-cache (dulu lewat Node tanpa gzip/cache).
+    root /var/www/__DOMAIN__/app/web;
+    index index.html;
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 6;
+    gzip_min_length 1024;
+    gzip_types text/css application/javascript application/json image/svg+xml model/gltf-binary;
     location / {
-        proxy_pass http://127.0.0.1:5860;
+        try_files $uri $uri/ =404;
+        add_header Cache-Control "no-cache";          # html/js/css: selalu dicek ulang (304 kalau sama)
+    }
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=604800";
     }
 }
 server {

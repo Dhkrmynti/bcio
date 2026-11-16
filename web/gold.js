@@ -232,6 +232,14 @@ export function tuneGold(m, wear = makeWear()) {
 }
 
 const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+// Model dimuat sekali dan dibagi hero + section (dulu diunduh dan di-decode dua kali).
+let coinsP = null;
 export function loadCoins() {
-  return new Promise((res, rej) => new GLTFLoader().setDRACOLoader(draco).load(COIN_URL, res, undefined, rej));
+  coinsP ??= new Promise((res, rej) => new GLTFLoader().setDRACOLoader(draco).load(COIN_URL, res, undefined, rej));
+  return coinsP;
 }
+
+// Resolusi render: layar HP / perangkat lemah cukup 1x, desktop maksimal 1.5x (dulu 2x = 4x piksel).
+const weak = matchMedia('(max-width: 760px), (pointer: coarse)').matches || (navigator.hardwareConcurrency || 8) <= 4;
+export const DPR = Math.min(devicePixelRatio || 1, weak ? 1 : 1.5);
+export const LOW = weak;

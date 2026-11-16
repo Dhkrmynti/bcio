@@ -1,7 +1,7 @@
 // Section di bawah hero: showcase koin, tumpukan "grow", dan hujan koin CTA.
 // Semua koin diambil dari model Blender yang sama dengan hero (assets/coinball.glb).
 import * as THREE from 'three';
-import { studioScene, makeWear, tuneGold, loadCoins } from './gold.js?v=19';
+import { studioScene, makeWear, tuneGold, loadCoins, DPR, LOW } from './gold.js?v=20';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = THREE.MathUtils.clamp;
@@ -11,11 +11,11 @@ const easeOut = (t) => 1 - Math.pow(1 - t, 3);
 // ---------- panggung: satu renderer per canvas, hanya digambar saat terlihat ----------
 const stages = [];
 function stage(canvas, { fov = 30, shadows = false } = {}) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, alpha: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(DPR);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  if (shadows) {
+  if (shadows && !LOW) {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   }
@@ -182,7 +182,7 @@ function initGrow(designs) {
   const sun = new THREE.DirectionalLight(0xffe2b0, 2.4);
   sun.position.set(-6, 12, 7);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.setScalar(1024);
   Object.assign(sun.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 });
   sun.shadow.bias = -0.0005;
   sun.shadow.normalBias = 0.02;
@@ -543,11 +543,16 @@ function loop() {
 loadCoins().then(async (gltf) => {
   const designs = {};
   for (const k of KEYS) designs[k] = await coinParts(gltf, k);
-  initShowcase(designs);
-  initSync(designs);
-  initAgentCoins(designs);
-  initGrow(designs);
-  initRain(designs);
+  // Kanvas 3D tiap section baru dibuat saat section hampir terlihat (dulu 5 WebGL sekaligus saat load).
+  const lazy = [['show', initShowcase], ['sync', initSync], ['agent', initAgentCoins], ['grow', initGrow], ['start', initRain]];
+  const lazyIO = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      lazyIO.unobserve(e.target);
+      lazy.find(([id]) => id === e.target.id)[1](designs);
+    }
+  }, { rootMargin: '600px 0px' });
+  lazy.forEach(([id]) => { const el = document.getElementById(id); if (el) lazyIO.observe(el); });
   document.body.classList.add('coins-ready');
   loop();
 }).catch((err) => console.error('Koin gagal dimuat', err));

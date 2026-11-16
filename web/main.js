@@ -1,7 +1,5 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { studioScene, makeWear, tuneGold } from './gold.js?v=19';
+import { studioScene, makeWear, tuneGold, loadCoins, DPR, LOW } from './gold.js?v=20';
 
 // ---------- ikon starburst (dipakai di judul & kartu kaca) ----------
 const rays = Array.from({ length: 18 }, (_, i) => {
@@ -22,12 +20,12 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, alpha: true, powerPreference: 'high-performance' });
 } catch {
   // tanpa WebGL: gambar render Blender tetap tampil
   throw new Error('WebGL tidak tersedia');
 }
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(DPR);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -46,7 +44,7 @@ camera.position.set(0, 0, 100);
 const key = new THREE.DirectionalLight(0xffe2b0, 2.6);
 key.position.set(-30, 40, 60);
 key.castShadow = true;
-key.shadow.mapSize.set(4096, 4096);
+key.shadow.mapSize.setScalar(LOW ? 1024 : 2048);
 key.shadow.bias = -0.0004;
 scene.add(key);
 scene.add(key.target);
@@ -89,7 +87,7 @@ function helix(turns, radius, length, tube) {
     const a = t * turns * Math.PI * 2;
     pts.push(new THREE.Vector3((t - 0.5) * length, Math.cos(a) * radius, Math.sin(a) * radius));
   }
-  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n * 2, tube, 20, false);
+  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n, tube, 10, false);
 }
 function squiggle(waves, amp, tube) {
   const pts = [];
@@ -99,12 +97,12 @@ function squiggle(waves, amp, tube) {
     const a = t * waves * Math.PI * 2;
     pts.push(new THREE.Vector3(Math.sin(a) * amp, (0.5 - t), Math.cos(a) * amp * 0.7));
   }
-  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n * 2, tube, 20, false);
+  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n, tube, 10, false);
 }
 const deco = {
   spring: new THREE.Mesh(helix(3, 0.24, 1, 0.07), whiteMat),
   wave: new THREE.Mesh(squiggle(2.6, 0.2, 0.045), whiteMat),
-  ring: new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.075, 48, 160), whiteMat),
+  ring: new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.075, 24, 96), whiteMat),
 };
 Object.values(deco).forEach((m) => scene.add(m));
 
@@ -198,8 +196,7 @@ function instance(root) {
   }
 }
 
-const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
-new GLTFLoader().setDRACOLoader(draco).load('assets/coinball.glb?v=18', (gltf) => {
+loadCoins().then((gltf) => {
   const root = gltf.scene;
   // jari-jari = rata-rata setengah sisi kotak pembatas (bukan diagonal kotak)
   const box = new THREE.Box3().setFromObject(root);
