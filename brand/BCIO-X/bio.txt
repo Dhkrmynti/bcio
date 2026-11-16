@@ -1,5 +1,5 @@
 Name:     BCIO
-Handle:   @bcioagents  (sama dengan org GitHub; cek dulu ketersediaannya, cadangan: @bciotrade)
+Handle:   @bcioagents  (aktif: https://x.com/bcioagents)
 Bio:      The AI agent terminal for stocks and crypto on Robinhood Chain. NVDA, TSLA, QQQ and BTC read as one market, 24/7. You sign every trade. Not financial advice.
           (157/160 karakter)
 Location: Robinhood Chain
